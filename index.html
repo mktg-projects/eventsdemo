@@ -419,13 +419,17 @@ function renderStats(){
   const committed=state.events.filter(e=>["attended","confirmed"].includes(e.s)).reduce((a,e)=>a+(e.cu||0),0);
   const planned=state.events.reduce((a,e)=>a+(e.cu||0),0);
   const c=s=>state.events.filter(e=>e.s===s).length;
+  const expL=state.events.reduce((a,e)=>a+(Number(e.expLeads)||0),0);
+  const actL=state.events.reduce((a,e)=>a+(Number(e.actLeads)||0),0);
   bar.innerHTML=`
     <div class="stat">Total events<b>${state.events.length}</b></div>
     <div class="stat">Attended<b>${c("attended")}</b></div>
     <div class="stat">Confirmed<b>${c("confirmed")}</b></div>
     <div class="stat">Tentative / Review<b>${c("tentative")+c("toreview")}</b></div>
     <div class="stat">Committed cost (att.+conf.)<b>$${committed.toLocaleString()}</b></div>
-    <div class="stat">All-in planned cost<b>$${planned.toLocaleString()}</b></div>`;
+    <div class="stat">All-in planned cost<b>$${planned.toLocaleString()}</b></div>
+    <div class="stat">Expected leads<b>${expL.toLocaleString()}</b></div>
+    <div class="stat">Actual leads<b>${actL.toLocaleString()}</b></div>`;
 }
 
 function card(e){
@@ -437,6 +441,7 @@ function card(e){
     <div class="line">📅 ${escapeHtml(fmtDate(e))}</div>
     <div class="line">📍 ${escapeHtml(e.loc||"—")}</div>
     ${e.ppl&&e.ppl!=="—"?`<div class="line">👤 ${escapeHtml(e.ppl)}</div>`:""}
+    ${(e.expLeads||e.actLeads)?`<div class="line">🎯 ${escapeHtml((e.actLeads||"–")+" / "+(e.expLeads||"–"))} leads</div>`:""}
     ${(()=>{const hf=e.att||(e.files&&e.files.length);const nc=(e.commentLog&&e.commentLog.length)||0;return (hf||nc)?`<div class="line">${hf?"📎 files":""}${hf&&nc?" · ":""}${nc?"💬 "+nc:""}</div>`:"";})()}
     <div class="meta">
       ${e.rg?`<span class="pill region">${escapeHtml(e.rg)}</span>`:""}
@@ -450,7 +455,7 @@ function card(e){
   return el;
 }
 
-function blank(){ return {id:uid(),t:"",s:"tentative",et:"",p:"",d:"",start:"",end:"",rg:"",loc:"",ppl:"",org:"",cu:0,cur:"USD",co:0,pd:false,ln:"",rel:"",att:"",files:[],commentLog:[],subtasks:[]}; }
+function blank(){ return {id:uid(),t:"",s:"tentative",et:"",p:"",d:"",start:"",end:"",rg:"",loc:"",ppl:"",org:"",cu:0,cur:"USD",co:0,pd:false,ln:"",rel:"",expLeads:"",actLeads:"",debrief:"",att:"",files:[],commentLog:[],subtasks:[]}; }
 
 function openModal(id){
   const isNew=!id;
@@ -488,6 +493,11 @@ function openModal(id){
     <div class="field"><label><input type="checkbox" id="f-pd" ${e.pd?"checked":""} style="width:auto;display:inline;margin-right:6px">Paid</label></div>
     <div class="field"><label>Link / debrief</label><input id="f-ln" value="${escapeHtml(e.ln)}">${e.ln&&/^https?:/.test(e.ln)?`<div style="margin-top:5px"><a class="link" href="${escapeHtml(e.ln)}" target="_blank">↗ open</a></div>`:""}</div>
     <div class="field"><label>Relevance & key focus / notes</label><textarea id="f-rel">${escapeHtml(e.rel)}</textarea></div>
+    <div class="row">
+      <div class="field"><label>Expected leads</label><input id="f-expleads" type="number" value="${escapeHtml(e.expLeads===undefined||e.expLeads===null?'':e.expLeads)}"></div>
+      <div class="field"><label>Actual leads</label><input id="f-actleads" type="number" value="${escapeHtml(e.actLeads===undefined||e.actLeads===null?'':e.actLeads)}"></div>
+    </div>
+    <div class="field"><label>Post-event debrief / outcomes</label><textarea id="f-debrief" placeholder="What worked, results, follow-ups…">${escapeHtml(e.debrief||'')}</textarea></div>
     <div class="field"><label>Attachments &amp; links</label>
       <div id="file-list" style="margin-bottom:7px"></div>
       <div class="add-sub" style="margin-bottom:7px"><input id="f-link" placeholder="Paste a link (SharePoint / Drive / etc.)…" style="flex:1;min-width:160px"><button class="btn sm" id="f-link-add">Add link</button></div>
@@ -580,6 +590,7 @@ function openModal(id){
     const cuv=document.getElementById("f-cu").value; e.cu=cuv===""?null:Number(cuv);
     e.cur=document.getElementById("f-cur").value; const cov=document.getElementById("f-co").value; e.co=cov===""?null:Number(cov);
     e.pd=document.getElementById("f-pd").checked; e.ln=document.getElementById("f-ln").value; e.rel=document.getElementById("f-rel").value;
+    e.expLeads=document.getElementById("f-expleads").value; e.actLeads=document.getElementById("f-actleads").value; e.debrief=document.getElementById("f-debrief").value;
     const idx=state.events.findIndex(x=>x.id===e.id); if(idx>=0) state.events[idx]=e; else state.events.push(e);
     save(); closeModal(); render();
   };
@@ -769,8 +780,8 @@ document.getElementById("filterRegion").addEventListener("change",e=>{prefs.regi
 document.getElementById("filterPerson").addEventListener("change",e=>{prefs.person=e.target.value;render();});
 document.getElementById("search").addEventListener("input",e=>{prefs.search=e.target.value;render();});
 document.getElementById("exportBtn").onclick=()=>{
-  const rows=[["Event","Status","Type","Participation","Dates","Region","Location","People","Organizer","Cost USD","Currency","Original cost","Paid","Link","Relevance","Attachments","Comments","Subtasks done/total"]];
-  state.events.forEach(e=>{const subs=e.subtasks||[];const att=[e.att,...(e.files||[]).map(f=>f.url)].filter(Boolean).join(" ; ");const cmts=(e.commentLog||[]).map(c=>c.author+": "+c.text).join(" | ");rows.push([e.t,e.s,e.et,e.p,fmtDate(e),e.rg,e.loc,e.ppl,e.org,e.cu,e.cur,e.co,e.pd?"yes":"no",e.ln,(e.rel||"").replace(/\n/g," "),att,cmts.replace(/\n/g," "),`${subs.filter(s=>s.done).length}/${subs.length}`]);});
+  const rows=[["Event","Status","Type","Participation","Dates","Region","Location","People","Organizer","Cost USD","Currency","Original cost","Paid","Link","Relevance","Expected leads","Actual leads","Debrief","Attachments","Comments","Subtasks done/total"]];
+  state.events.forEach(e=>{const subs=e.subtasks||[];const att=[e.att,...(e.files||[]).map(f=>f.url)].filter(Boolean).join(" ; ");const cmts=(e.commentLog||[]).map(c=>c.author+": "+c.text).join(" | ");rows.push([e.t,e.s,e.et,e.p,fmtDate(e),e.rg,e.loc,e.ppl,e.org,e.cu,e.cur,e.co,e.pd?"yes":"no",e.ln,(e.rel||"").replace(/\n/g," "),e.expLeads||"",e.actLeads||"",(e.debrief||"").replace(/\n/g," "),att,cmts.replace(/\n/g," "),`${subs.filter(s=>s.done).length}/${subs.length}`]);});
   const csv=rows.map(r=>r.map(c=>`"${(c==null?"":c).toString().replace(/"/g,'""')}"`).join(",")).join("\n");
   const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"})); a.download="field-marketing-events-2026.csv"; a.click();
 };
