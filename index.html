@@ -85,6 +85,17 @@ a.link { color: #4762ff; text-decoration: none; font-size: 12px; word-break: bre
 .pill.web-tent { background: #fff4e5; color: #b7791f; }
 .pill.web-done { background: #eef6ee; color: #2f7d32; }
 .web-month { font-weight: 650; font-size: 13px; color: #3a4654; margin: 14px 0 9px; padding-bottom: 5px; border-bottom: 1px solid #e3e6ea; }
+#budget { padding: 8px 18px 24px; max-width: 880px; }
+.bud-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.bud-table th, .bud-table td { padding: 9px 10px; border-bottom: 1px solid #e3e6ea; text-align: right; }
+.bud-table th:first-child, .bud-table td:first-child { text-align: left; }
+.bud-table th { font-size: 11px; color: #7a838d; text-transform: uppercase; letter-spacing: .3px; }
+.bud-input { width: 110px; text-align: right; }
+.bud-bar { height: 6px; background: #e3e6ea; border-radius: 4px; overflow: hidden; margin-top: 5px; }
+.bud-bar > i { display: block; height: 100%; background: #4caf50; }
+.bud-bar.over > i { background: #c0392b; }
+.bud-total td { font-weight: 700; background: #f4f6f8; }
+.bud-neg { color: #c0392b; font-weight: 600; }
 </style>
 </head>
 <body>
@@ -100,6 +111,7 @@ a.link { color: #4762ff; text-decoration: none; font-size: 12px; word-break: bre
     <button class="btn sm view-tab primary" data-view="board">Board</button>
     <button class="btn sm view-tab" data-view="calendar">Calendar</button>
     <button class="btn sm view-tab" data-view="webinars">Webinars</button>
+    <button class="btn sm view-tab" data-view="budget">Budget</button>
   </span>
   <button class="btn" id="reloadBtn" title="Refresh from server">↻</button>
   <button class="btn" id="emailBtn">✉ Email tasks</button>
@@ -110,6 +122,7 @@ a.link { color: #4762ff; text-decoration: none; font-size: 12px; word-break: bre
 <div class="board" id="board"></div>
 <div id="calendar" style="display:none"></div>
 <div id="webinars" style="display:none"></div>
+<div id="budget" style="display:none"></div>
 <div class="modal-bg" id="modalBg"><div class="modal" id="modal"></div></div>
 <div class="modal-bg" id="draftBg"><div class="modal" id="draftModal"></div></div>
 
@@ -298,7 +311,8 @@ function fmtDate(e){
     return s.toLocaleDateString(undefined,{day:"numeric",month:"short"})+" – "+en.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"}); }
   return e.d || "Date TBD";
 }
-function backfillDates(){ let ch=false; state.events.forEach(ev=>{ if(!ev.start){ const dt=parseDates(ev); if(dt){ ev.start=toISO(dt.s); if(!sameDay(dt.s,dt.e)) ev.end=toISO(dt.e); ch=true; } } }); if(!Array.isArray(state.webinars)){ state.webinars=seedWebinars(); ch=true; } return ch; }
+function backfillDates(){ let ch=false; state.events.forEach(ev=>{ if(!ev.start){ const dt=parseDates(ev); if(dt){ ev.start=toISO(dt.s); if(!sameDay(dt.s,dt.e)) ev.end=toISO(dt.e); ch=true; } } }); if(!Array.isArray(state.webinars)){ state.webinars=seedWebinars(); ch=true; } if(!state.budgets){ state.budgets={Europe:70000,America:50000,"Pacific ROW":10000,Other:0}; ch=true; } return ch; }
+function regionCategory(rg){ rg=(rg||"").toLowerCase(); if(rg.indexOf("americ")>-1)return "America"; if(rg.indexOf("europe")>-1)return "Europe"; if(rg.indexOf("pacific")>-1||rg.indexOf("row")>-1)return "Pacific ROW"; return "Other"; }
 function seedWebinars(){
   const W=[
    ["Welcome Webinar","Feb","10","Product Launch","Overview","Confirmed","General","Alex","","Newsletter","120","Dummy webinar"],
@@ -375,8 +389,10 @@ function render() {
   document.getElementById("board").style.display = viewMode==="board"?"flex":"none";
   document.getElementById("calendar").style.display = viewMode==="calendar"?"block":"none";
   document.getElementById("webinars").style.display = viewMode==="webinars"?"block":"none";
+  document.getElementById("budget").style.display = viewMode==="budget"?"block":"none";
   if(viewMode==="calendar"){ renderStats(); refreshFilters(); renderCalendar(); return; }
   if(viewMode==="webinars"){ renderStats(); refreshFilters(); renderWebinars(); return; }
+  if(viewMode==="budget"){ renderStats(); refreshFilters(); renderBudget(); return; }
   const board = document.getElementById("board");
   board.innerHTML = "";
   const q = prefs.search.toLowerCase();
@@ -675,6 +691,23 @@ function refreshFilters(){
   const fp=document.getElementById("filterPerson"); fp.innerHTML=`<option value="">All people</option>`+allPeople().map(p=>`<option value="${escapeHtml(p)}" ${prefs.person===p?"selected":""}>${escapeHtml(p)}</option>`).join("");
 }
 
+function renderBudget(){
+  const wrap=document.getElementById("budget");
+  const cats=["Europe","America","Pacific ROW","Other"];
+  const data={}; cats.forEach(c=>data[c]={budget:Number((state.budgets||{})[c]||0),committed:0,tentative:0});
+  state.events.forEach(ev=>{ const c=regionCategory(ev.rg); if(!data[c])data[c]={budget:0,committed:0,tentative:0}; const cu=Number(ev.cu||0); if(ev.s==="attended"||ev.s==="confirmed")data[c].committed+=cu; else if(ev.s==="tentative"||ev.s==="toreview")data[c].tentative+=cu; });
+  const usd=n=>"$"+Math.round(n).toLocaleString();
+  const tot={budget:0,committed:0,tentative:0};
+  const rows=cats.map(c=>{ const d=data[c]; tot.budget+=d.budget;tot.committed+=d.committed;tot.tentative+=d.tentative; const rem=d.budget-d.committed; const pct=d.budget>0?Math.round(d.committed/d.budget*100):0; const over=d.committed>d.budget&&d.budget>0;
+    return `<tr><td>${c}</td><td><input class="bud-input" type="number" data-cat="${c}" value="${d.budget}"></td><td>${usd(d.committed)}</td><td>${usd(d.tentative)}</td><td class="${rem<0?'bud-neg':''}">${usd(rem)}</td><td>${pct}%<div class="bud-bar ${over?'over':''}"><i style="width:${Math.min(pct,100)}%"></i></div></td></tr>`;
+  }).join("");
+  const remT=tot.budget-tot.committed, pctT=tot.budget>0?Math.round(tot.committed/tot.budget*100):0;
+  wrap.innerHTML=`<div style="font-weight:650;font-size:15px;margin-bottom:4px">💰 Budget vs. Actual <span class="sub">(USD)</span></div>
+    <div class="hint" style="margin-bottom:12px">Committed = Attended + Confirmed.  Tentative = Tentative + To Review.  Edit a budget to update instantly.</div>
+    <table class="bud-table"><thead><tr><th>Region</th><th>Budget</th><th>Committed</th><th>Tentative</th><th>Remaining</th><th>Committed %</th></tr></thead><tbody>${rows}
+    <tr class="bud-total"><td>TOTAL</td><td>${usd(tot.budget)}</td><td>${usd(tot.committed)}</td><td>${usd(tot.tentative)}</td><td class="${remT<0?'bud-neg':''}">${usd(remT)}</td><td>${pctT}%</td></tr></tbody></table>`;
+  wrap.querySelectorAll(".bud-input").forEach(inp=>inp.addEventListener("change",()=>{ if(!state.budgets)state.budgets={}; state.budgets[inp.dataset.cat]=Number(inp.value)||0; save(); renderBudget(); }));
+}
 function renderWebinars(){
   const wrap=document.getElementById("webinars");
   const list=state.webinars||[];
