@@ -3,21 +3,30 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Events Board — DEMO</title>
+<title>Field Marketing - TrusTrace (DEMO)</title>
 <style>
 :root { color-scheme: light; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f6f7f9; color: #1d2125; font-size: 14px; line-height: 1.4; }
-header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 18px; background: #fff; border-bottom: 1px solid #e3e6ea; position: sticky; top: 0; z-index: 20; }
-header h1 { font-size: 17px; font-weight: 650; margin-right: auto; }
+header { display: flex; flex-direction: column; gap: 10px; padding: 12px 18px; background: #fff; border-top: 3px solid #1F2ECC; border-bottom: 1px solid #e3e6ea; position: sticky; top: 0; z-index: 20; }
+.hrow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.hrow-filters { background: #f6f7f9; border: 1px solid #e3e6ea; border-radius: 9px; padding: 7px 9px; flex-wrap: nowrap; }
+.hrow-filters input, .hrow-filters select { width: auto; }
+.hrow-filters #search { flex: 1; min-width: 120px; }
+.hrow-filters select { width: 150px; flex-shrink: 0; }
+.hrow .spacer { margin-left: auto; }
+.view-tabs { display: inline-flex; gap: 4px; }
+.view-tab { padding: 9px 18px; font-size: 13.5px; font-weight: 600; }
+header h1 { font-size: 17px; font-weight: 650; }
 .sub { font-size: 12px; color: #7a838d; font-weight: 400; }
 .btn { border: none; border-radius: 7px; padding: 8px 13px; font-size: 13px; font-weight: 550; cursor: pointer; background: #e8eaed; color: #1d2125; transition: background .12s; }
 .btn:hover { background: #dde0e4; }
-.btn.primary { background: #4762ff; color: #fff; } .btn.primary:hover { background: #3850e6; }
+.btn.primary { background: #1F2ECC; color: #fff; } .btn.primary:hover { background: #18239c; }
+.btn.orange { background: #E55C2E; color: #fff; } .btn.orange:hover { background: #cf4e23; }
 .btn.danger { background: #fbe9e9; color: #c0392b; } .btn.danger:hover { background: #f5d5d5; }
 .btn.sm { padding: 4px 9px; font-size: 12px; }
 input, textarea, select { font-family: inherit; font-size: 13px; border: 1px solid #d4d8dd; border-radius: 7px; padding: 8px 10px; width: 100%; background: #fff; color: #1d2125; }
-input:focus, textarea:focus, select:focus { outline: none; border-color: #4762ff; box-shadow: 0 0 0 2px #4762ff22; }
+input:focus, textarea:focus, select:focus { outline: none; border-color: #1F2ECC; box-shadow: 0 0 0 2px #1F2ECC22; }
 textarea { resize: vertical; min-height: 56px; }
 label { display: block; font-size: 12px; font-weight: 600; color: #5c6772; margin: 0 0 4px; }
 .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
@@ -62,7 +71,9 @@ label { display: block; font-size: 12px; font-weight: 600; color: #5c6772; margi
 .dir-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
 .empty { color: #9aa3ac; text-align: center; padding: 18px; font-size: 12px; }
 .hint { font-size: 11px; color: #9aa3ac; margin-top: 3px; }
-a.link { color: #4762ff; text-decoration: none; font-size: 12px; word-break: break-all; } a.link:hover { text-decoration: underline; }
+.sec { display: flex; align-items: center; gap: 9px; font-size: 11px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: #1F2ECC; margin: 22px 0 12px; padding-bottom: 8px; border-bottom: 1px solid #DEDEDE; }
+.sec::before { content: ""; display: inline-block; width: 3px; height: 13px; background: #E55C2E; border-radius: 2px; }
+a.link { color: #1F2ECC; text-decoration: none; font-size: 12px; word-break: break-all; } a.link:hover { text-decoration: underline; }
 #calendar { padding: 4px 18px 24px; }
 .cal-head { display: flex; align-items: center; justify-content: center; gap: 16px; margin: 4px 0 14px; }
 .cal-head .mlabel { font-size: 16px; font-weight: 650; min-width: 180px; text-align: center; }
@@ -71,11 +82,14 @@ a.link { color: #4762ff; text-decoration: none; font-size: 12px; word-break: bre
 .cal-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 6px; }
 .cal-bg { background: #fff; border: 1px solid #e3e6ea; border-radius: 8px; grid-row: 1 / -1; }
 .cal-bg.other { background: #f1f2f4; }
-.cal-bg.today { border-color: #4762ff; box-shadow: 0 0 0 1px #4762ff; }
+.cal-bg.today { border-color: #1F2ECC; box-shadow: 0 0 0 1px #1F2ECC; }
 .cal-daynum { font-size: 11px; color: #7a838d; font-weight: 600; padding: 4px 6px; grid-row: 1; }
 .cal-bar { align-self: center; margin: 0 3px; font-size: 10.5px; line-height: 15px; color: #fff; border-radius: 4px; padding: 1px 7px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cal-undated { margin-top: 16px; font-size: 12px; }
 .cal-undated .chip { display: inline-block; background: #eceef0; color: #3a4654; border-radius: 14px; padding: 3px 10px; margin: 3px 4px 0 0; cursor: pointer; font-size: 11px; }
+.cal-bar.cal-web { background: #fff; color: #E55C2E; border: 1.5px solid #E55C2E; padding: 0 6px; font-weight: 600; }
+.cal-legend { font-size: 11px; color: #7a838d; margin: 0 0 10px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.cal-legend .sw { display: inline-block; width: 13px; height: 10px; border-radius: 3px; vertical-align: middle; margin-right: 5px; }
 #webinars { padding: 8px 18px 24px; }
 .web-grid { display: flex; flex-wrap: wrap; gap: 12px; }
 .web-card { background: #fff; border: 1px solid #e3e6ea; border-radius: 10px; padding: 13px 14px; width: 300px; cursor: pointer; box-shadow: 0 1px 2px #0000000a; }
@@ -96,33 +110,44 @@ a.link { color: #4762ff; text-decoration: none; font-size: 12px; word-break: bre
 .bud-bar.over > i { background: #c0392b; }
 .bud-total td { font-weight: 700; background: #f4f6f8; }
 .bud-neg { color: #c0392b; font-weight: 600; }
+#settings { padding: 8px 18px 28px; }
+#settings .add-sub { margin-top: 8px; }
 </style>
 </head>
 <body>
 <header>
-  <h1>🧪 Events Board — DEMO <span class="sub">— dummy data for testing</span></h1>
-  <div class="controls">
-    <input id="search" placeholder="Search events..." style="min-width:160px">
+  <div class="hrow">
+    <h1>🧪 Field Marketing — TrusTrace <span class="sub">— DEMO (dummy data)</span></h1>
+    <span class="spacer"></span>
+    <span id="syncStatus" class="sub">●</span>
+  </div>
+  <div class="hrow hrow-filters">
+    <input id="search" placeholder="🔍 Search events...">
     <select id="filterRegion" title="Region"><option value="">All regions</option></select>
     <select id="filterPerson" title="Person"><option value="">All people</option></select>
   </div>
-  <span id="syncStatus" class="sub" style="margin-right:4px">●</span>
-  <span style="display:inline-flex;gap:3px;margin-right:4px">
-    <button class="btn sm view-tab primary" data-view="board">Board</button>
-    <button class="btn sm view-tab" data-view="calendar">Calendar</button>
-    <button class="btn sm view-tab" data-view="webinars">Webinars</button>
-    <button class="btn sm view-tab" data-view="budget">Budget</button>
-  </span>
-  <button class="btn" id="reloadBtn" title="Refresh from server">↻</button>
-  <button class="btn" id="emailBtn">✉ Email tasks</button>
-  <button class="btn" id="exportBtn">Export CSV</button>
-  <button class="btn primary" id="newBtn">+ Event</button>
+  <div class="hrow">
+    <span class="view-tabs">
+      <button class="btn view-tab primary" data-view="board">Events</button>
+      <button class="btn view-tab" data-view="webinars">Webinars</button>
+      <button class="btn view-tab" data-view="calendar">Calendar</button>
+      <button class="btn view-tab" data-view="budget">Budget</button>
+      <button class="btn view-tab" data-view="settings">⚙︎ Settings</button>
+    </span>
+    <span class="spacer"></span>
+    <button class="btn" id="reloadBtn" title="Refresh from server">↻</button>
+    <button class="btn" id="emailBtn">✉ Email tasks</button>
+    <button class="btn" id="exportBtn">Export CSV</button>
+    <button class="btn orange" id="newWebBtn">+ Webinar</button>
+    <button class="btn primary" id="newBtn">+ Event</button>
+  </div>
 </header>
 <div class="statbar" id="statbar"></div>
 <div class="board" id="board"></div>
 <div id="calendar" style="display:none"></div>
 <div id="webinars" style="display:none"></div>
 <div id="budget" style="display:none"></div>
+<div id="settings" style="display:none"></div>
 <div class="modal-bg" id="modalBg"><div class="modal" id="modal"></div></div>
 <div class="modal-bg" id="draftBg"><div class="modal" id="draftModal"></div></div>
 
@@ -130,8 +155,8 @@ a.link { color: #4762ff; text-decoration: none; font-size: 12px; word-break: bre
 <script>
 const COLUMNS = [
   { id: "attended",     name: "Attended",      color: "#4caf50" },
-  { id: "confirmed",    name: "Confirmed",     color: "#4762ff" },
-  { id: "tentative",    name: "Tentative",     color: "#e8a33d" },
+  { id: "confirmed",    name: "Confirmed",     color: "#1F2ECC" },
+  { id: "tentative",    name: "Tentative",     color: "#E55C2E" },
   { id: "toreview",     name: "To Review",     color: "#9b59b6" },
   { id: "notattending", name: "Not Attending", color: "#9aa3ac" },
 ];
@@ -311,8 +336,8 @@ function fmtDate(e){
     return s.toLocaleDateString(undefined,{day:"numeric",month:"short"})+" – "+en.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"}); }
   return e.d || "Date TBD";
 }
-function backfillDates(){ let ch=false; state.events.forEach(ev=>{ if(!ev.start){ const dt=parseDates(ev); if(dt){ ev.start=toISO(dt.s); if(!sameDay(dt.s,dt.e)) ev.end=toISO(dt.e); ch=true; } } }); if(!Array.isArray(state.webinars)){ state.webinars=seedWebinars(); ch=true; } if(!state.budgets){ state.budgets={Europe:70000,America:50000,"Pacific ROW":10000,Other:0}; ch=true; } return ch; }
-function regionCategory(rg){ rg=(rg||"").toLowerCase(); if(rg.indexOf("americ")>-1)return "America"; if(rg.indexOf("europe")>-1)return "Europe"; if(rg.indexOf("pacific")>-1||rg.indexOf("row")>-1)return "Pacific ROW"; return "Other"; }
+function backfillDates(){ let ch=false; state.events.forEach(ev=>{ if(!ev.start){ const dt=parseDates(ev); if(dt){ ev.start=toISO(dt.s); if(!sameDay(dt.s,dt.e)) ev.end=toISO(dt.e); ch=true; } } }); if(!Array.isArray(state.webinars)){ state.webinars=seedWebinars(); ch=true; } if(!state.budgets){ state.budgets={Europe:70000,America:50000,"Pacific ROW":10000,Other:0}; ch=true; } if(!Array.isArray(state.regions)){ state.regions=["Europe","America","Pacific ROW"]; ch=true; } if(!state.fxRates){ state.fxRates=Object.assign({},FX_RATES); ch=true; } return ch; }
+function regionCategory(rg){ const t=(rg||"").toLowerCase(); const rs=(state&&state.regions)||["Europe","America","Pacific ROW"]; for(const r of rs){ if(r && t.indexOf(r.toLowerCase())>-1) return r; } return "Other"; }
 function seedWebinars(){
   const W=[
    ["Welcome Webinar","Feb","10","Product Launch","Overview","Confirmed","General","Alex","","Newsletter","120","Dummy webinar"],
@@ -320,7 +345,7 @@ function seedWebinars(){
    ["Industry Trends Panel","Jun","","Panel","Trends","Tentative","General","Jordan","","Newsletter","150","Dummy webinar"],
    ["Year-End Review","Nov","","Thought Leadership","Wrap-up","Tentative","General","Taylor","","","80","Dummy webinar"],
   ];
-  return W.map(r=>({id:uid(),title:r[0],month:r[1],date:r[2],type:r[3],topic:r[4],status:r[5],audience:r[6],lead:r[7],deps:r[8],promo:r[9],reg:r[10],notes:r[11]}));
+  return W.map(r=>({id:uid(),title:r[0],month:r[1],date:r[2],type:r[3],topic:r[4],status:r[5],audience:r[6],lead:r[7],deps:r[8],promo:r[9],reg:r[10],notes:r[11],subtasks:[]}));
 }
 let calMonth = new Date(2026,5,1);
 function renderCalendar(){
@@ -335,6 +360,7 @@ function renderCalendar(){
   const numWeeks=totalCells/7;
   const DAY=86400000;
   let html=`<div class="cal-head"><button class="btn sm" id="cal-prev">◀</button><div class="mlabel">${new Date(y,mo,1).toLocaleString(undefined,{month:"long",year:"numeric"})}</div><button class="btn sm" id="cal-next">▶</button><button class="btn sm" id="cal-today">Today</button></div>`;
+  html+=`<div class="cal-legend"><span><span class="sw" style="background:#9aa3ac"></span>Events — coloured by status</span><span><span class="sw" style="background:#fff;border:1.5px solid #E55C2E"></span>🎤 Webinars</span></div>`;
   html+=`<div class="cal-dowrow">`+["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d=>`<div class="cal-dow">${d}</div>`).join("")+`</div>`;
   for(let w=0; w<numWeeks; w++){
     const firstDayNum=(w*7)-startIdx+1;
@@ -349,6 +375,11 @@ function renderCalendar(){
         const ce=Math.min(6, Math.round((en-weekStart)/DAY));
         segs.push({x:x, cs:cs, ce:ce});
       }
+    });
+    (state.webinars||[]).forEach(w=>{
+      const mi=MONTHS[(w.month||"").slice(0,3).toLowerCase()]; if(mi==null) return;
+      const d=new Date(2026, mi, parseInt(w.date,10)||1);
+      if(d>=weekStart && d<=weekEnd){ const c=Math.max(0,Math.min(6,Math.round((d-weekStart)/DAY))); segs.push({web:w, cs:c, ce:c, isWeb:true}); }
     });
     segs.sort((a,b)=> a.cs-b.cs || (b.ce-b.cs)-(a.ce-a.cs));
     const lanes=[];
@@ -366,7 +397,11 @@ function renderCalendar(){
     }
     segs.forEach(seg=>{
       const span=seg.ce-seg.cs+1;
-      html+=`<div class="cal-bar" data-id="${seg.x.e.id}" title="${escapeHtml(seg.x.e.t+' · '+fmtDate(seg.x.e))}" style="grid-column:${seg.cs+1}/span ${span};grid-row:${seg.lane+2};background:${statusColor(seg.x.e.s)}">${escapeHtml(seg.x.e.t)}</div>`;
+      if(seg.isWeb){
+        html+=`<div class="cal-bar cal-web" data-wid="${seg.web.id}" title="🎤 ${escapeHtml(seg.web.title)}" style="grid-column:${seg.cs+1}/span ${span};grid-row:${seg.lane+2}">🎤 ${escapeHtml(seg.web.title)}</div>`;
+      } else {
+        html+=`<div class="cal-bar" data-id="${seg.x.e.id}" title="${escapeHtml(seg.x.e.t+' · '+fmtDate(seg.x.e))}" style="grid-column:${seg.cs+1}/span ${span};grid-row:${seg.lane+2};background:${statusColor(seg.x.e.s)}">${escapeHtml(seg.x.e.t)}</div>`;
+      }
     });
     html+=`</div>`;
   }
@@ -375,7 +410,7 @@ function renderCalendar(){
   document.getElementById("cal-prev").onclick=()=>{ calMonth=new Date(y,mo-1,1); renderCalendar(); };
   document.getElementById("cal-next").onclick=()=>{ calMonth=new Date(y,mo+1,1); renderCalendar(); };
   document.getElementById("cal-today").onclick=()=>{ const t=new Date(); calMonth=new Date(t.getFullYear(),t.getMonth(),1); renderCalendar(); };
-  cal.querySelectorAll(".cal-bar,.chip").forEach(el=>el.onclick=()=>openModal(el.dataset.id));
+  cal.querySelectorAll(".cal-bar,.chip").forEach(el=>{ if(el.dataset.wid) el.onclick=()=>openWebinar(el.dataset.wid); else if(el.dataset.id) el.onclick=()=>openModal(el.dataset.id); });
 }
 
 function allRegions(){ return [...new Set(state.events.map(e=>e.rg).filter(Boolean))].sort(); }
@@ -390,9 +425,11 @@ function render() {
   document.getElementById("calendar").style.display = viewMode==="calendar"?"block":"none";
   document.getElementById("webinars").style.display = viewMode==="webinars"?"block":"none";
   document.getElementById("budget").style.display = viewMode==="budget"?"block":"none";
+  document.getElementById("settings").style.display = viewMode==="settings"?"block":"none";
   if(viewMode==="calendar"){ renderStats(); refreshFilters(); renderCalendar(); return; }
   if(viewMode==="webinars"){ renderStats(); refreshFilters(); renderWebinars(); return; }
   if(viewMode==="budget"){ renderStats(); refreshFilters(); renderBudget(); return; }
+  if(viewMode==="settings"){ renderStats(); refreshFilters(); renderSettings(); return; }
   const board = document.getElementById("board");
   board.innerHTML = "";
   const q = prefs.search.toLowerCase();
@@ -417,19 +454,17 @@ function render() {
 function renderStats(){
   const bar=document.getElementById("statbar");
   const committed=state.events.filter(e=>["attended","confirmed"].includes(e.s)).reduce((a,e)=>a+(e.cu||0),0);
-  const planned=state.events.reduce((a,e)=>a+(e.cu||0),0);
-  const c=s=>state.events.filter(e=>e.s===s).length;
-  const expL=state.events.reduce((a,e)=>a+(Number(e.expLeads)||0),0);
-  const actL=state.events.reduce((a,e)=>a+(Number(e.actLeads)||0),0);
+  const totalBudget=Object.values(state.budgets||{}).reduce((a,v)=>a+(Number(v)||0),0);
+  const remaining=totalBudget-committed;
+  const pend=[...state.events, ...(state.webinars||[])].reduce((a,x)=>a+((x.subtasks||[]).filter(s=>s.owner&&!s.done&&!s.notified).length),0);
+  const now=new Date(); now.setHours(0,0,0,0); const in30=new Date(now.getTime()+30*86400000);
+  const next30=state.events.filter(e=>{ const dt=parseDates(e); if(!dt) return false; const s=new Date(dt.s.getFullYear(),dt.s.getMonth(),dt.s.getDate()); return s>=now && s<=in30; }).length;
   bar.innerHTML=`
     <div class="stat">Total events<b>${state.events.length}</b></div>
-    <div class="stat">Attended<b>${c("attended")}</b></div>
-    <div class="stat">Confirmed<b>${c("confirmed")}</b></div>
-    <div class="stat">Tentative / Review<b>${c("tentative")+c("toreview")}</b></div>
     <div class="stat">Committed cost (att.+conf.)<b>$${committed.toLocaleString()}</b></div>
-    <div class="stat">All-in planned cost<b>$${planned.toLocaleString()}</b></div>
-    <div class="stat">Expected leads<b>${expL.toLocaleString()}</b></div>
-    <div class="stat">Actual leads<b>${actL.toLocaleString()}</b></div>`;
+    <div class="stat">Budget remaining<b style="color:${remaining<0?'#c0392b':'#2f7d32'}">$${remaining.toLocaleString()}</b></div>
+    <div class="stat" style="cursor:pointer" title="See which events" onclick="showUpcoming()">Next 30 days<b>${next30}</b></div>
+    <div class="stat" style="cursor:pointer" title="Tasks assigned but not yet emailed" onclick="openEmailCenter()">✉ To send<b style="color:${pend?'#E55C2E':'#1d2125'}">${pend}</b></div>`;
 }
 
 function card(e){
@@ -441,7 +476,9 @@ function card(e){
     <div class="line">📅 ${escapeHtml(fmtDate(e))}</div>
     <div class="line">📍 ${escapeHtml(e.loc||"—")}</div>
     ${e.ppl&&e.ppl!=="—"?`<div class="line">👤 ${escapeHtml(e.ppl)}</div>`:""}
-    ${(e.expLeads||e.actLeads)?`<div class="line">🎯 ${escapeHtml((e.actLeads||"–")+" / "+(e.expLeads||"–"))} leads</div>`:""}
+    ${e.expLeads?`<div class="line">🎯 ${escapeHtml(e.expLeads)} leads (target)</div>`:""}
+    ${e.hsLink?`<div class="line">📊 HubSpot linked</div>`:""}
+    ${(()=>{const tn=(e.subtasks||[]).filter(s=>s.owner&&!s.done&&!s.notified).length;return tn?`<div class="line" style="color:#E55C2E">✉ ${tn} to notify</div>`:"";})()}
     ${(()=>{const hf=e.att||(e.files&&e.files.length);const nc=(e.commentLog&&e.commentLog.length)||0;return (hf||nc)?`<div class="line">${hf?"📎 files":""}${hf&&nc?" · ":""}${nc?"💬 "+nc:""}</div>`:"";})()}
     <div class="meta">
       ${e.rg?`<span class="pill region">${escapeHtml(e.rg)}</span>`:""}
@@ -455,60 +492,76 @@ function card(e){
   return el;
 }
 
-function blank(){ return {id:uid(),t:"",s:"tentative",et:"",p:"",d:"",start:"",end:"",rg:"",loc:"",ppl:"",org:"",cu:0,cur:"USD",co:0,pd:false,ln:"",rel:"",expLeads:"",actLeads:"",debrief:"",att:"",files:[],commentLog:[],subtasks:[]}; }
+function blank(){ return {id:uid(),t:"",s:"tentative",et:"",p:"",d:"",start:"",end:"",rg:"",loc:"",ppl:"",org:"",cu:0,cur:"USD",co:0,pd:false,ln:"",rel:"",expLeads:"",debrief:"",hsLink:"",att:"",files:[],commentLog:[],subtasks:[]}; }
 
 function openModal(id){
   const isNew=!id;
   const e=isNew?blank():JSON.parse(JSON.stringify(state.events.find(x=>x.id===id)));
   const m=document.getElementById("modal");
-  const curList = CURRENCIES.includes(e.cur) ? CURRENCIES : [e.cur, ...CURRENCIES];
+  const CUR = ["", ...Object.keys(state.fxRates||FX_RATES)];
+  const curList = CUR.includes(e.cur) ? CUR : [e.cur, ...CUR];
   const curOpts = curList.map(cx=>`<option value="${escapeHtml(cx)}" ${e.cur===cx?"selected":""}>${cx||"— none —"}</option>`).join("");
+  const regList = (state.regions||[]).slice(); if(e.rg && !regList.includes(e.rg)) regList.unshift(e.rg);
+  const regOpts = `<option value="" ${!e.rg?"selected":""}>— none —</option>` + regList.map(r=>`<option ${e.rg===r?"selected":""}>${escapeHtml(r)}</option>`).join("");
   m.innerHTML=`
-    <h2>${isNew?"New Event":"Edit Event"}</h2><div class="mh">All fields editable. Drag cards between columns to change status.</div>
-    <div class="field"><label>Event name</label><input id="f-t" value="${escapeHtml(e.t)}"></div>
+    <h2>${isNew?"New Event":"Edit Event"}</h2><div class="mh">All fields editable · drag cards between columns to change status.</div>
+
+    <div class="sec">① Overview</div>
+    <div class="field"><label>Event name <span style="color:#E55C2E">*</span></label><input id="f-t" value="${escapeHtml(e.t)}"></div>
     <div class="row">
       <div class="field"><label>Status</label><select id="f-s">${COLUMNS.map(c=>`<option value="${c.id}" ${e.s===c.id?"selected":""}>${c.name}</option>`).join("")}</select></div>
       <div class="field"><label>Event type</label><input id="f-et" value="${escapeHtml(e.et)}"></div>
+      <div class="field"><label>Participation</label><input id="f-p" value="${escapeHtml(e.p)}"></div>
     </div>
     <div class="row">
       <div class="field"><label>Start date</label><input id="f-start" type="date" value="${escapeHtml(e.start||'')}"></div>
       <div class="field"><label>End date (optional)</label><input id="f-end" type="date" value="${escapeHtml(e.end||'')}"></div>
-      <div class="field"><label>Participation</label><input id="f-p" value="${escapeHtml(e.p)}"></div>
     </div>
-    <div class="hint" style="margin-top:-6px;margin-bottom:13px">📅 These dates place the event on the Calendar and show on its card. For a multi-day event set both; single-day, just Start.</div>
+    <div class="hint" style="margin-top:-6px;margin-bottom:13px">📅 Dates place the event on the Calendar. Multi-day: set both; single day: just Start.</div>
+    <div class="field"><label>Event website / debrief link</label><input id="f-ln" value="${escapeHtml(e.ln)}">${e.ln&&/^https?:/.test(e.ln)?`<div style="margin-top:5px"><a class="link" href="${escapeHtml(e.ln)}" target="_blank">↗ open</a></div>`:""}</div>
+
+    <div class="sec">② Location &amp; team</div>
     <div class="row">
-      <div class="field"><label>Region</label><input id="f-rg" value="${escapeHtml(e.rg)}"></div>
+      <div class="field"><label>Region <span style="color:#E55C2E">*</span></label><select id="f-rg">${regOpts}</select></div>
       <div class="field"><label>Location</label><input id="f-loc" value="${escapeHtml(e.loc)}"></div>
     </div>
     <div class="row">
       <div class="field"><label>People attending</label><input id="f-ppl" value="${escapeHtml(e.ppl)}"></div>
       <div class="field"><label>Organizer / owner</label><input id="f-org" value="${escapeHtml(e.org)}"></div>
     </div>
+
+    <div class="sec">③ Budget</div>
     <div class="row">
-      <div class="field"><label>Cost (USD)</label><input id="f-cu" type="number" value="${e.cu===null?'':e.cu}"></div>
-      <div class="field"><label>Currency</label><select id="f-cur">${curOpts}</select></div>
       <div class="field"><label>Original cost</label><input id="f-co" type="number" value="${e.co===null?'':e.co}"></div>
+      <div class="field"><label>Currency</label><select id="f-cur">${curOpts}</select></div>
+      <div class="field"><label>Cost (USD)</label><input id="f-cu" type="number" value="${e.cu===null?'':e.cu}"></div>
     </div>
-    <div class="hint" style="margin-top:-6px;margin-bottom:13px">💱 Enter the <b>Original cost</b> and pick a <b>Currency</b>, and <b>Cost (USD)</b> fills in automatically — that USD figure is what the board's spend totals use. Type over it only if you need an exact amount.</div>
+    <div class="hint" style="margin-top:-6px;margin-bottom:8px">💱 Enter Original cost + Currency and Cost (USD) auto-fills — that USD figure feeds the board totals. Type over it for an exact amount.</div>
     <div class="field"><label><input type="checkbox" id="f-pd" ${e.pd?"checked":""} style="width:auto;display:inline;margin-right:6px">Paid</label></div>
-    <div class="field"><label>Link / debrief</label><input id="f-ln" value="${escapeHtml(e.ln)}">${e.ln&&/^https?:/.test(e.ln)?`<div style="margin-top:5px"><a class="link" href="${escapeHtml(e.ln)}" target="_blank">↗ open</a></div>`:""}</div>
-    <div class="field"><label>Relevance & key focus / notes</label><textarea id="f-rel">${escapeHtml(e.rel)}</textarea></div>
+
+    <div class="sec">④ Goals &amp; links</div>
     <div class="row">
-      <div class="field"><label>Expected leads</label><input id="f-expleads" type="number" value="${escapeHtml(e.expLeads===undefined||e.expLeads===null?'':e.expLeads)}"></div>
-      <div class="field"><label>Actual leads</label><input id="f-actleads" type="number" value="${escapeHtml(e.actLeads===undefined||e.actLeads===null?'':e.actLeads)}"></div>
+      <div class="field"><label>Expected leads (target)</label><input id="f-expleads" type="number" value="${escapeHtml(e.expLeads===undefined||e.expLeads===null?'':e.expLeads)}"></div>
+      <div class="field"><label>HubSpot event (link)</label><input id="f-hslink" value="${escapeHtml(e.hsLink||'')}" placeholder="HubSpot Marketing Event URL">${(e.hsLink&&/^https?:/.test(e.hsLink))?`<div style="margin-top:5px"><a class="link" href="${escapeHtml(e.hsLink)}" target="_blank">📊 open in HubSpot</a></div>`:""}</div>
     </div>
-    <div class="field"><label>Post-event debrief / outcomes</label><textarea id="f-debrief" placeholder="What worked, results, follow-ups…">${escapeHtml(e.debrief||'')}</textarea></div>
+    <div class="field"><label>Relevance &amp; key focus / notes</label><textarea id="f-rel">${escapeHtml(e.rel)}</textarea></div>
+    <div class="hint" style="margin-top:-6px;margin-bottom:4px">📊 Leads, deals &amp; ROI live in HubSpot — link the event above. "Expected leads" is just your planning target.</div>
+
+    <div class="sec">⑤ Prep checklist</div>
+    <div class="subtasks" style="border-top:none;padding-top:0"><div id="sub-list"></div>
+      <div class="add-sub"><input id="new-sub" placeholder="Add a subtask..." style="flex:1;min-width:140px"><input id="new-sub-owner" placeholder="owner: name or email" style="width:180px"><button class="btn sm" id="add-sub-btn">Add</button></div></div>
+
+    <div class="sec">⑥ Files &amp; discussion</div>
     <div class="field"><label>Attachments &amp; links</label>
       <div id="file-list" style="margin-bottom:7px"></div>
       <div class="add-sub" style="margin-bottom:7px"><input id="f-link" placeholder="Paste a link (SharePoint / Drive / etc.)…" style="flex:1;min-width:160px"><button class="btn sm" id="f-link-add">Add link</button></div>
       <div style="display:flex;align-items:center;gap:8px"><input type="file" id="f-file" multiple style="font-size:12px;flex:1"><span id="f-upstatus" class="hint"></span></div>
     </div>
+    <div class="field"><label>Post-event debrief / outcomes (quick note)</label><textarea id="f-debrief" placeholder="What worked, follow-ups… (numbers live in HubSpot)">${escapeHtml(e.debrief||'')}</textarea></div>
     <div class="field"><label>Comments / updates <span class="hint" style="display:inline;margin:0">(saved when you click Save)</span></label>
       <div id="comment-log" style="max-height:150px;overflow:auto;border:1px solid #eceef0;border-radius:7px;padding:8px;margin-bottom:6px"></div>
       <div class="add-sub"><input id="c-name" placeholder="your name" style="width:120px"><input id="c-text" placeholder="Add a comment…" style="flex:1;min-width:140px"><button class="btn sm" id="c-add">Post</button></div>
     </div>
-    <div class="subtasks"><label>Subtasks (prep & linked sub-events) — add an owner email, then ✉ to notify them</label><div id="sub-list"></div>
-      <div class="add-sub"><input id="new-sub" placeholder="Add a subtask..." style="flex:1;min-width:140px"><input id="new-sub-owner" placeholder="owner: name or email" style="width:180px"><button class="btn sm" id="add-sub-btn">Add</button></div></div>
     <div class="modal-actions">
       ${isNew?"":`<button class="btn danger" id="del-btn">Delete</button>`}
       <span class="spacer"></span><button class="btn" id="cancel-btn">Cancel</button><button class="btn primary" id="save-btn">Save</button>
@@ -518,7 +571,7 @@ function openModal(id){
     const fco=document.getElementById("f-co"), fcur=document.getElementById("f-cur"), fcu=document.getElementById("f-cu");
     function autoUSD(){
       const orig=parseFloat(fco.value); const cur=(fcur.value||"").toUpperCase().trim();
-      if(!isNaN(orig) && FX_RATES[cur]!==undefined) fcu.value = Math.round(orig*FX_RATES[cur]);
+      const rates=state.fxRates||FX_RATES; if(!isNaN(orig) && rates[cur]!==undefined) fcu.value = Math.round(orig*rates[cur]);
     }
     fco.addEventListener("input",autoUSD); fcur.addEventListener("change",autoUSD);
   })();
@@ -577,7 +630,7 @@ function openModal(id){
     });
   }
   renderSubs();
-  document.getElementById("add-sub-btn").onclick=()=>{const v=document.getElementById("new-sub").value.trim();if(!v)return;const ow=document.getElementById("new-sub-owner").value.trim();e.subtasks.push({id:uid(),title:v,done:false,owner:ow});document.getElementById("new-sub").value="";document.getElementById("new-sub-owner").value="";renderSubs();};
+  document.getElementById("add-sub-btn").onclick=()=>{const v=document.getElementById("new-sub").value.trim();if(!v){alert("Type the task before adding it.");document.getElementById("new-sub").focus();return;}const ow=document.getElementById("new-sub-owner").value.trim();e.subtasks.push({id:uid(),title:v,done:false,owner:ow});document.getElementById("new-sub").value="";document.getElementById("new-sub-owner").value="";renderSubs();};
   document.getElementById("new-sub").addEventListener("keydown",ev=>{if(ev.key==="Enter"){ev.preventDefault();document.getElementById("add-sub-btn").click();}});
   document.getElementById("cancel-btn").onclick=closeModal;
   if(!isNew) document.getElementById("del-btn").onclick=()=>{if(confirm("Delete this event?")){state.events=state.events.filter(x=>x.id!==e.id);save();closeModal();render();}};
@@ -586,11 +639,12 @@ function openModal(id){
     e.s=document.getElementById("f-s").value; e.et=document.getElementById("f-et").value;
     e.start=document.getElementById("f-start").value; e.end=document.getElementById("f-end").value;
     e.p=document.getElementById("f-p").value; e.rg=document.getElementById("f-rg").value; e.loc=document.getElementById("f-loc").value;
+    if(!e.rg){ alert("Please choose a Region — it drives the Budget view."); return; }
     e.ppl=document.getElementById("f-ppl").value; e.org=document.getElementById("f-org").value;
     const cuv=document.getElementById("f-cu").value; e.cu=cuv===""?null:Number(cuv);
     e.cur=document.getElementById("f-cur").value; const cov=document.getElementById("f-co").value; e.co=cov===""?null:Number(cov);
     e.pd=document.getElementById("f-pd").checked; e.ln=document.getElementById("f-ln").value; e.rel=document.getElementById("f-rel").value;
-    e.expLeads=document.getElementById("f-expleads").value; e.actLeads=document.getElementById("f-actleads").value; e.debrief=document.getElementById("f-debrief").value;
+    e.expLeads=document.getElementById("f-expleads").value; e.debrief=document.getElementById("f-debrief").value; e.hsLink=document.getElementById("f-hslink").value.trim();
     const idx=state.events.findIndex(x=>x.id===e.id); if(idx>=0) state.events[idx]=e; else state.events.push(e);
     save(); closeModal(); render();
   };
@@ -619,6 +673,30 @@ ${BOARD_URL ? BOARD_URL+"#event="+e.id : "(the shared events board)"}
 
 Thanks!`;
   showDraft(to, subject, body);
+  s.notified=true;
+}
+function emailWebTask(w, s){
+  if(!s.owner){ alert("Add an owner (name or email) on this task first, then click ✉."); return; }
+  const to = resolveEmail(s.owner);
+  if(!to){ alert('No email found for "'+s.owner+'". Add their email in ⚙︎ Settings, or type the full email here.'); return; }
+  const subject = `[TrusTrace Webinar] Task assigned: ${s.title}`;
+  const body =
+`Hi,
+
+You've been assigned a task for the webinar:
+
+  Webinar: ${w.title}
+  When:    ${[w.month,w.date].filter(Boolean).join(" ")||"TBD"}
+  Status:  ${w.status}
+
+  Your task: ${s.title}
+
+When it's done, open the board and tick it off:
+${BOARD_URL || "(the shared events board)"}
+
+Thanks!`;
+  showDraft(to, subject, body);
+  s.notified=true;
 }
 
 function personEvents(name){
@@ -667,33 +745,54 @@ function showDraft(to, subject, body){
     document.body.appendChild(a); a.click(); a.remove();
   };
 }
+function showUpcoming(){
+  const now=new Date(); now.setHours(0,0,0,0); const in30=new Date(now.getTime()+30*86400000);
+  const list=state.events.map(e=>({e:e,dt:parseDates(e)})).filter(x=>{ if(!x.dt) return false; const s=new Date(x.dt.s.getFullYear(),x.dt.s.getMonth(),x.dt.s.getDate()); return s>=now && s<=in30; }).sort((a,b)=>a.dt.s-b.dt.s);
+  const m=document.getElementById("modal");
+  const rows = list.length ? list.map(x=>`<div class="up-row" data-id="${x.e.id}" style="display:flex;gap:8px;align-items:center;cursor:pointer;border:1px solid #e3e6ea;border-radius:8px;padding:9px 11px;margin-bottom:7px"><span class="sub" style="width:104px">${escapeHtml(fmtDate(x.e))}</span><span style="flex:1;font-weight:600">${escapeHtml(x.e.t)}</span>${x.e.rg?`<span class="pill region">${escapeHtml(x.e.rg)}</span>`:""}<span class="pill" style="background:${statusColor(x.e.s)};color:#fff">${escapeHtml((COLUMNS.find(c=>c.id===x.e.s)||{}).name||x.e.s)}</span></div>`).join("") : `<div class="hint" style="padding:14px 0">No events in the next 30 days.</div>`;
+  m.innerHTML=`<h2>Next 30 days <span class="sub">(${list.length})</span></h2><div class="mh">Events starting between today and ${in30.toLocaleDateString(undefined,{day:"numeric",month:"short"})}. Click one to open it.</div>${rows}<div class="modal-actions"><span class="spacer"></span><button class="btn" id="up-close">Close</button></div>`;
+  document.getElementById("modalBg").classList.add("open");
+  m.querySelectorAll(".up-row").forEach(r=>r.onclick=()=>openModal(r.dataset.id));
+  document.getElementById("up-close").onclick=closeModal;
+}
+function pendingByOwner(){
+  const map={};
+  function add(name, dateLabel, s){ const email=resolveEmail(s.owner); const key=(email||s.owner).toLowerCase(); if(!map[key]) map[key]={label:s.owner, email:email, items:[]}; map[key].items.push({name:name, date:dateLabel, s:s}); }
+  state.events.forEach(e=>{ (e.subtasks||[]).forEach(s=>{ if(s.owner && !s.done && !s.notified) add(e.t, (e.start||e.d)?fmtDate(e):"", s); }); });
+  (state.webinars||[]).forEach(w=>{ (w.subtasks||[]).forEach(s=>{ if(s.owner && !s.done && !s.notified) add("🎤 "+w.title, [w.month,w.date].filter(Boolean).join(" "), s); }); });
+  return map;
+}
+function sendPending(key){
+  const o=pendingByOwner()[key]; if(!o) return;
+  const byP={}; o.items.forEach(it=>{ (byP[it.name]=byP[it.name]||{name:it.name,date:it.date,t:[]}).t.push(it.s.title); });
+  let body=`Hi ${o.label},\n\nHere are the field-marketing tasks assigned to you that still need doing:\n\n`;
+  Object.keys(byP).forEach(n=>{ const g=byP[n]; body+=`* ${g.name}${g.date?" — "+g.date:""}\n`; g.t.forEach(t=>body+=`    [ ] ${t}\n`); body+=`\n`; });
+  body+=`When done, open the board and tick them off:\n${BOARD_URL||"(the shared events board)"}\n\nThanks!`;
+  showDraft(o.email||"", "[TrusTrace] Your outstanding field-marketing tasks", body);
+  o.items.forEach(it=>{ it.s.notified=true; }); save(); openEmailCenter();
+}
 function openEmailCenter(){
   const m=document.getElementById("modal");
-  const rows = state.directory.map((p,i)=>{
-    const evs = personEvents(p.name);
-    const out = evs.reduce((a,e)=>a+(e.subtasks||[]).filter(s=>!s.done).length,0);
-    return `<div class="dir-row" data-i="${i}">
-       <input class="d-name" value="${escapeHtml(p.name)}" style="width:100px">
-       <input class="d-email" value="${escapeHtml(p.email)}" placeholder="email@trustrace.com" style="flex:1">
-       <span class="hint" style="width:110px;text-align:right">${evs.length} events · ${out} to-dos</span>
-       <button class="btn sm primary d-send" title="Open a pre-filled email">✉</button>
-       <button class="btn sm danger d-del">✕</button>
-     </div>`;
-  }).join("");
-  m.innerHTML = `<h2>Email tasks to owners</h2>
-    <div class="mh">Fill in each person's email once (it's saved). Click ✉ to open a pre-filled email listing every event they're on and the prep still outstanding — then just hit send.</div>
-    <div id="dir-list">${rows || '<div class="hint">No people yet.</div>'}</div>
-    <div class="add-sub" style="margin-top:10px"><input id="d-new-name" placeholder="Name" style="width:100px"><input id="d-new-email" placeholder="email (optional)" style="flex:1"><button class="btn sm" id="d-add">Add person</button></div>
+  const map=pendingByOwner(); const owners=Object.keys(map);
+  const totalTasks=owners.reduce((a,k)=>a+map[k].items.length,0);
+  let body;
+  if(!owners.length){
+    body=`<div class="hint" style="padding:16px 0;font-size:13px">✅ All caught up — every assigned task has had its email sent.</div>`;
+  } else {
+    body=owners.map(k=>{ const o=map[k];
+      const tasks=o.items.map(it=>`<div class="line" style="margin-left:2px">• ${escapeHtml(it.s.title)} <span class="sub">— ${escapeHtml(it.name)}</span></div>`).join("");
+      return `<div style="border:1px solid #e3e6ea;border-radius:9px;padding:10px;margin-bottom:9px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-weight:600">${escapeHtml(o.label)}</span><span class="sub">${o.email?escapeHtml(o.email):'<span style="color:#c0392b">no email — add in ⚙︎ Settings</span>'}</span><span class="hint" style="margin-left:auto">${o.items.length} to send</span><button class="btn sm primary d-send" data-k="${escapeHtml(k)}">✉ Compose &amp; mark sent</button></div>
+        <div style="margin-top:6px">${tasks}</div></div>`;
+    }).join("");
+  }
+  m.innerHTML = `<h2>Tasks awaiting an email</h2>
+    <div class="mh">Tasks that have an owner assigned but haven't been emailed yet. Compose opens the email and marks them sent so they drop off this list. Manage people in ⚙︎ Settings.</div>
+    ${totalTasks?`<div style="font-weight:600;margin-bottom:10px">${totalTasks} task${totalTasks>1?"s":""} to send to ${owners.length} ${owners.length>1?"people":"person"}</div>`:""}
+    <div id="pending-list">${body}</div>
     <div class="modal-actions"><span class="spacer"></span><button class="btn" id="d-close">Close</button></div>`;
   document.getElementById("modalBg").classList.add("open");
-  m.querySelectorAll(".dir-row").forEach(row=>{
-    const i=+row.dataset.i;
-    row.querySelector(".d-name").addEventListener("input",e=>{state.directory[i].name=e.target.value;save();});
-    row.querySelector(".d-email").addEventListener("input",e=>{state.directory[i].email=e.target.value.trim();save();});
-    row.querySelector(".d-send").addEventListener("click",()=>composePersonEmail(state.directory[i]));
-    row.querySelector(".d-del").addEventListener("click",()=>{state.directory.splice(i,1);save();openEmailCenter();});
-  });
-  document.getElementById("d-add").onclick=()=>{const n=document.getElementById("d-new-name").value.trim();if(!n)return;state.directory.push({name:n,email:document.getElementById("d-new-email").value.trim()});save();openEmailCenter();};
+  m.querySelectorAll(".d-send").forEach(btn=>btn.addEventListener("click",()=>sendPending(btn.dataset.k)));
   document.getElementById("d-close").onclick=closeModal;
 }
 
@@ -704,7 +803,7 @@ function refreshFilters(){
 
 function renderBudget(){
   const wrap=document.getElementById("budget");
-  const cats=["Europe","America","Pacific ROW","Other"];
+  const cats=[...(state.regions||["Europe","America","Pacific ROW"]), "Other"];
   const data={}; cats.forEach(c=>data[c]={budget:Number((state.budgets||{})[c]||0),committed:0,tentative:0});
   state.events.forEach(ev=>{ const c=regionCategory(ev.rg); if(!data[c])data[c]={budget:0,committed:0,tentative:0}; const cu=Number(ev.cu||0); if(ev.s==="attended"||ev.s==="confirmed")data[c].committed+=cu; else if(ev.s==="tentative"||ev.s==="toreview")data[c].tentative+=cu; });
   const usd=n=>"$"+Math.round(n).toLocaleString();
@@ -719,6 +818,35 @@ function renderBudget(){
     <tr class="bud-total"><td>TOTAL</td><td>${usd(tot.budget)}</td><td>${usd(tot.committed)}</td><td>${usd(tot.tentative)}</td><td class="${remT<0?'bud-neg':''}">${usd(remT)}</td><td>${pctT}%</td></tr></tbody></table>`;
   wrap.querySelectorAll(".bud-input").forEach(inp=>inp.addEventListener("change",()=>{ if(!state.budgets)state.budgets={}; state.budgets[inp.dataset.cat]=Number(inp.value)||0; save(); renderBudget(); }));
 }
+function renderSettings(){
+  const wrap=document.getElementById("settings");
+  if(!Array.isArray(state.regions)) state.regions=["Europe","America","Pacific ROW"];
+  if(!state.fxRates) state.fxRates=Object.assign({},FX_RATES);
+  if(!Array.isArray(state.directory)) state.directory=[];
+  const esc=escapeHtml;
+  let html=`<div style="max-width:760px">`;
+  html+=`<div class="sec">Regions</div><div class="hint" style="margin-top:-6px;margin-bottom:10px">Used for the Region dropdown on events and the rows in the Budget view.</div><div>`;
+  html+= state.regions.map((r,i)=>`<div class="dir-row"><input class="r-name" data-i="${i}" value="${esc(r)}" style="flex:1;max-width:280px"><button class="btn sm danger r-del" data-i="${i}">✕</button></div>`).join("");
+  html+=`</div><div class="add-sub"><input id="r-new" placeholder="Add a region…" style="max-width:280px"><button class="btn sm" id="r-add">Add region</button></div>`;
+  html+=`<div class="sec">Team directory</div><div class="hint" style="margin-top:-6px;margin-bottom:10px">Names + emails used for owner lookups and the Email-tasks digests (same list as ✉ Email tasks).</div><div>`;
+  html+= state.directory.map((p,i)=>`<div class="dir-row"><input class="p-name" data-i="${i}" value="${esc(p.name)}" style="width:130px"><input class="p-email" data-i="${i}" value="${esc(p.email||'')}" placeholder="email@trustrace.com" style="flex:1"><button class="btn sm danger p-del" data-i="${i}">✕</button></div>`).join("");
+  html+=`</div><div class="add-sub"><input id="p-new-name" placeholder="Name" style="width:130px"><input id="p-new-email" placeholder="email (optional)" style="flex:1"><button class="btn sm" id="p-add">Add person</button></div>`;
+  html+=`<div class="sec">Currencies &amp; FX rates</div><div class="hint" style="margin-top:-6px;margin-bottom:10px">USD per 1 unit — used to auto-convert Original cost → Cost (USD).</div><div>`;
+  html+= Object.keys(state.fxRates).map(c=>`<div class="dir-row"><span style="width:64px;font-weight:600">${esc(c)}</span><input class="fx-rate" data-c="${esc(c)}" type="number" step="0.001" value="${state.fxRates[c]}" style="width:120px">${c==="USD"?"":`<button class="btn sm danger fx-del" data-c="${esc(c)}">✕</button>`}</div>`).join("");
+  html+=`</div><div class="add-sub"><input id="fx-new-code" placeholder="Code e.g. JPY" style="width:120px"><input id="fx-new-rate" type="number" step="0.001" placeholder="USD per 1" style="width:120px"><button class="btn sm" id="fx-add">Add currency</button></div>`;
+  html+=`</div>`;
+  wrap.innerHTML=html;
+  wrap.querySelectorAll(".r-name").forEach(inp=>inp.addEventListener("change",()=>{ state.regions[+inp.dataset.i]=inp.value.trim(); save(); }));
+  wrap.querySelectorAll(".r-del").forEach(b=>b.onclick=()=>{ state.regions.splice(+b.dataset.i,1); save(); renderSettings(); });
+  document.getElementById("r-add").onclick=()=>{ const v=document.getElementById("r-new").value.trim(); if(!v)return; state.regions.push(v); save(); renderSettings(); };
+  wrap.querySelectorAll(".p-name").forEach(inp=>inp.addEventListener("change",()=>{ state.directory[+inp.dataset.i].name=inp.value.trim(); save(); }));
+  wrap.querySelectorAll(".p-email").forEach(inp=>inp.addEventListener("change",()=>{ state.directory[+inp.dataset.i].email=inp.value.trim(); save(); }));
+  wrap.querySelectorAll(".p-del").forEach(b=>b.onclick=()=>{ state.directory.splice(+b.dataset.i,1); save(); renderSettings(); });
+  document.getElementById("p-add").onclick=()=>{ const n=document.getElementById("p-new-name").value.trim(); if(!n)return; state.directory.push({name:n,email:document.getElementById("p-new-email").value.trim()}); save(); renderSettings(); };
+  wrap.querySelectorAll(".fx-rate").forEach(inp=>inp.addEventListener("change",()=>{ state.fxRates[inp.dataset.c]=Number(inp.value)||0; save(); }));
+  wrap.querySelectorAll(".fx-del").forEach(b=>b.onclick=()=>{ delete state.fxRates[b.dataset.c]; save(); renderSettings(); });
+  document.getElementById("fx-add").onclick=()=>{ const c=document.getElementById("fx-new-code").value.trim().toUpperCase(); const r=Number(document.getElementById("fx-new-rate").value); if(!c||!r)return; state.fxRates[c]=r; save(); renderSettings(); };
+}
 function renderWebinars(){
   const wrap=document.getElementById("webinars");
   const list=state.webinars||[];
@@ -731,40 +859,90 @@ function renderWebinars(){
      ${w.audience?`<div class="line">🎯 ${escapeHtml(w.audience)}</div>`:""}
      ${w.lead?`<div class="line">👤 ${escapeHtml(w.lead)}</div>`:""}
      <div style="display:flex;gap:8px;align-items:center;margin-top:8px"><span class="pill ${stcls(w.status)}">${escapeHtml(w.status||"")}</span>${w.reg?`<span class="line" style="margin:0">👥 ${escapeHtml(w.reg)} regs</span>`:""}</div>
+     ${(()=>{const subs=w.subtasks||[];const done=subs.filter(s=>s.done).length;const tn=subs.filter(s=>s.owner&&!s.done&&!s.notified).length;return (subs.length?`<div class="line" style="margin-top:6px">✓ ${done}/${subs.length} tasks</div>`:"")+(tn?`<div class="line" style="color:#E55C2E">✉ ${tn} to notify</div>`:"");})()}
    </div>`; }
   const groups={};
   list.forEach(w=>{ const k=MONTHS[(w.month||"").slice(0,3).toLowerCase()]; const key=(k==null?99:k); (groups[key]=groups[key]||[]).push(w); });
   const order=Object.keys(groups).map(Number).sort((a,b)=>a-b);
-  let html=`<div style="display:flex;align-items:center;margin-bottom:8px"><div style="font-weight:650;font-size:15px">🎤 Webinar Programme 2026 <span class="sub">(${list.length})</span></div><button class="btn primary" id="web-new" style="margin-left:auto">+ Webinar</button></div>`;
+  let html=`<div style="display:flex;align-items:center;margin-bottom:8px"><div style="font-weight:650;font-size:15px">🎤 Webinar Programme 2026 <span class="sub">(${list.length})</span></div></div>`;
   order.forEach(k=>{
     html+=`<div class="web-month">${k===99?"Month TBD":MONTHNAMES[k]} <span class="sub" style="font-weight:400">· ${groups[k].length}</span></div>`;
     html+=`<div class="web-grid">`+groups[k].map(cardHtml).join("")+`</div>`;
   });
   wrap.innerHTML=html;
-  document.getElementById("web-new").onclick=()=>openWebinar(null);
   wrap.querySelectorAll(".web-card").forEach(el=>el.onclick=()=>openWebinar(el.dataset.id));
 }
 function openWebinar(id){
   const isNew=!id;
-  const w=isNew?{id:uid(),title:"",month:"",date:"",type:"",topic:"",status:"Tentative",audience:"",lead:"",deps:"",promo:"",reg:"",notes:""}:JSON.parse(JSON.stringify(state.webinars.find(x=>x.id===id)));
+  const w=isNew?{id:uid(),title:"",month:"",date:"",type:"",topic:"",status:"Tentative",audience:"",lead:"",deps:"",promo:"",reg:"",notes:"",subtasks:[]}:JSON.parse(JSON.stringify(state.webinars.find(x=>x.id===id)));
+  if(!Array.isArray(w.subtasks)) w.subtasks=[];
   const m=document.getElementById("modal");
   const stOpts=["Confirmed","Tentative","Done"].map(s=>`<option ${w.status===s?"selected":""}>${s}</option>`).join("");
-  m.innerHTML=`<h2>${isNew?"New Webinar":"Edit Webinar"}</h2><div class="mh">Fields match the Webinar Programme tab in the source file.</div>
-    <div class="field"><label>Webinar title</label><input id="w-title" value="${escapeHtml(w.title)}"></div>
-    <div class="row"><div class="field"><label>Month</label><input id="w-month" value="${escapeHtml(w.month)}"></div><div class="field"><label>Date</label><input id="w-date" value="${escapeHtml(w.date)}"></div><div class="field"><label>Status</label><select id="w-status">${stOpts}</select></div></div>
-    <div class="row"><div class="field"><label>Type</label><input id="w-type" value="${escapeHtml(w.type)}"></div><div class="field"><label>Topic area</label><input id="w-topic" value="${escapeHtml(w.topic)}"></div></div>
-    <div class="row"><div class="field"><label>Target audience</label><input id="w-aud" value="${escapeHtml(w.audience)}"></div><div class="field"><label>Expected registrations</label><input id="w-reg" value="${escapeHtml(w.reg)}"></div></div>
+  const MO=["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]; const moList=MO.includes(w.month)?MO:[w.month,...MO];
+  const moOpts=moList.map(m2=>`<option value="${escapeHtml(m2)}" ${w.month===m2?"selected":""}>${m2||"— none —"}</option>`).join("");
+  m.innerHTML=`<h2>${isNew?"New Webinar":"Edit Webinar"}</h2><div class="mh">Fields match the Webinar Programme tab.</div>
+
+    <div class="sec">① Overview</div>
+    <div class="field"><label>Webinar title <span style="color:#E55C2E">*</span></label><input id="w-title" value="${escapeHtml(w.title)}"></div>
+    <div class="row">
+      <div class="field"><label>Month <span style="color:#E55C2E">*</span></label><select id="w-month">${moOpts}</select></div>
+      <div class="field"><label>Date</label><input id="w-date" value="${escapeHtml(w.date)}" placeholder="e.g. 25"></div>
+      <div class="field"><label>Status</label><select id="w-status">${stOpts}</select></div>
+    </div>
+
+    <div class="sec">② Details</div>
+    <div class="row">
+      <div class="field"><label>Type</label><input id="w-type" value="${escapeHtml(w.type)}"></div>
+      <div class="field"><label>Topic area</label><input id="w-topic" value="${escapeHtml(w.topic)}"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Target audience</label><input id="w-aud" value="${escapeHtml(w.audience)}"></div>
+      <div class="field"><label>Expected registrations</label><input id="w-reg" type="number" value="${escapeHtml(w.reg)}"></div>
+    </div>
+
+    <div class="sec">③ Ownership &amp; promotion</div>
     <div class="field"><label>Lead / speakers</label><input id="w-lead" value="${escapeHtml(w.lead)}"></div>
-    <div class="field"><label>Dependencies</label><input id="w-deps" value="${escapeHtml(w.deps)}"></div>
-    <div class="field"><label>Promotion plan</label><input id="w-promo" value="${escapeHtml(w.promo)}"></div>
+    <div class="row">
+      <div class="field"><label>Dependencies</label><input id="w-deps" value="${escapeHtml(w.deps)}"></div>
+      <div class="field"><label>Promotion plan</label><input id="w-promo" value="${escapeHtml(w.promo)}"></div>
+    </div>
+
+    <div class="sec">④ Notes</div>
     <div class="field"><label>Notes</label><textarea id="w-notes">${escapeHtml(w.notes)}</textarea></div>
+
+    <div class="sec">⑤ Tasks</div>
+    <div class="subtasks" style="border-top:none;padding-top:0"><div id="w-sub-list"></div>
+      <div class="add-sub"><input id="w-new-sub" placeholder="Add a task..." style="flex:1;min-width:140px"><input id="w-new-sub-owner" placeholder="owner: name or email" style="width:180px"><button class="btn sm" id="w-add-sub-btn">Add</button></div></div>
+
     <div class="modal-actions">${isNew?"":`<button class="btn danger" id="w-del">Delete</button>`}<span class="spacer"></span><button class="btn" id="w-cancel">Cancel</button><button class="btn primary" id="w-save">Save</button></div>`;
   document.getElementById("modalBg").classList.add("open");
   const val=(x)=>document.getElementById(x).value;
+  (function(){
+    const list=document.getElementById("w-sub-list");
+    function renderWSubs(){
+      list.innerHTML = w.subtasks.length ? "" : `<div class="hint">No tasks.</div>`;
+      w.subtasks.forEach((s,i)=>{
+        if(s.owner===undefined) s.owner="";
+        const row=document.createElement("div"); row.className="subtask-row"+(s.done?" done":"");
+        row.innerHTML=`<input type="checkbox" ${s.done?"checked":""}><span class="st-txt"><input value="${escapeHtml(s.title)}"></span><input class="st-owner" placeholder="owner (name or email)" value="${escapeHtml(s.owner)}"><button class="btn sm st-mail" title="Email this task to the owner">✉</button><button class="btn sm danger">✕</button>`;
+        const cb=row.querySelector("input[type=checkbox]"), txt=row.querySelector(".st-txt input"), own=row.querySelector(".st-owner"), mail=row.querySelector(".st-mail"), del=row.querySelector(".danger");
+        cb.addEventListener("change",()=>{s.done=cb.checked;renderWSubs();});
+        txt.addEventListener("input",()=>s.title=txt.value);
+        own.addEventListener("input",()=>s.owner=own.value.trim());
+        mail.addEventListener("click",()=>emailWebTask(w,s));
+        del.addEventListener("click",()=>{w.subtasks.splice(i,1);renderWSubs();});
+        list.appendChild(row);
+      });
+    }
+    renderWSubs();
+    document.getElementById("w-add-sub-btn").onclick=()=>{const v=document.getElementById("w-new-sub").value.trim();if(!v){alert("Type the task before adding it.");document.getElementById("w-new-sub").focus();return;}w.subtasks.push({id:uid(),title:v,done:false,owner:document.getElementById("w-new-sub-owner").value.trim()});document.getElementById("w-new-sub").value="";document.getElementById("w-new-sub-owner").value="";renderWSubs();};
+    document.getElementById("w-new-sub").addEventListener("keydown",ev=>{ if(ev.key==="Enter"){ ev.preventDefault(); document.getElementById("w-add-sub-btn").click(); }});
+  })();
   document.getElementById("w-cancel").onclick=closeModal;
   if(!isNew) document.getElementById("w-del").onclick=()=>{ if(confirm("Delete this webinar?")){ state.webinars=state.webinars.filter(x=>x.id!==w.id); save(); closeModal(); render(); } };
   document.getElementById("w-save").onclick=()=>{
     w.title=val("w-title").trim(); if(!w.title){ alert("Enter a title."); return; }
+    if(!val("w-month")){ alert("Please choose a Month — it groups the webinar on the board and calendar."); return; }
     w.month=val("w-month"); w.date=val("w-date"); w.status=val("w-status"); w.type=val("w-type"); w.topic=val("w-topic"); w.audience=val("w-aud"); w.reg=val("w-reg"); w.lead=val("w-lead"); w.deps=val("w-deps"); w.promo=val("w-promo"); w.notes=val("w-notes");
     const idx=state.webinars.findIndex(x=>x.id===w.id); if(idx>=0) state.webinars[idx]=w; else state.webinars.push(w);
     save(); closeModal(); render();
@@ -773,6 +951,7 @@ function openWebinar(id){
 document.getElementById("modalBg").addEventListener("click",e=>{if(e.target.id==="modalBg")closeModal();});
 document.getElementById("draftBg").addEventListener("click",e=>{if(e.target.id==="draftBg")document.getElementById("draftBg").classList.remove("open");});
 document.getElementById("newBtn").onclick=()=>openModal(null);
+document.getElementById("newWebBtn").onclick=()=>{ viewMode="webinars"; document.querySelectorAll(".view-tab").forEach(x=>x.classList.toggle("primary",x.dataset.view==="webinars")); render(); openWebinar(null); };
 document.getElementById("reloadBtn").onclick=()=>{ if(CONNECTED){ setSync("Refreshing…","#b7791f"); poll(); } };
 document.querySelectorAll(".view-tab").forEach(b=>b.onclick=()=>{ viewMode=b.dataset.view; document.querySelectorAll(".view-tab").forEach(x=>x.classList.toggle("primary",x.dataset.view===viewMode)); render(); });
 document.getElementById("emailBtn").onclick=openEmailCenter;
@@ -780,8 +959,8 @@ document.getElementById("filterRegion").addEventListener("change",e=>{prefs.regi
 document.getElementById("filterPerson").addEventListener("change",e=>{prefs.person=e.target.value;render();});
 document.getElementById("search").addEventListener("input",e=>{prefs.search=e.target.value;render();});
 document.getElementById("exportBtn").onclick=()=>{
-  const rows=[["Event","Status","Type","Participation","Dates","Region","Location","People","Organizer","Cost USD","Currency","Original cost","Paid","Link","Relevance","Expected leads","Actual leads","Debrief","Attachments","Comments","Subtasks done/total"]];
-  state.events.forEach(e=>{const subs=e.subtasks||[];const att=[e.att,...(e.files||[]).map(f=>f.url)].filter(Boolean).join(" ; ");const cmts=(e.commentLog||[]).map(c=>c.author+": "+c.text).join(" | ");rows.push([e.t,e.s,e.et,e.p,fmtDate(e),e.rg,e.loc,e.ppl,e.org,e.cu,e.cur,e.co,e.pd?"yes":"no",e.ln,(e.rel||"").replace(/\n/g," "),e.expLeads||"",e.actLeads||"",(e.debrief||"").replace(/\n/g," "),att,cmts.replace(/\n/g," "),`${subs.filter(s=>s.done).length}/${subs.length}`]);});
+  const rows=[["Event","Status","Type","Participation","Dates","Region","Location","People","Organizer","Cost USD","Currency","Original cost","Paid","Link","Relevance","Expected leads","Debrief","HubSpot event","Attachments","Comments","Subtasks done/total"]];
+  state.events.forEach(e=>{const subs=e.subtasks||[];const att=[e.att,...(e.files||[]).map(f=>f.url)].filter(Boolean).join(" ; ");const cmts=(e.commentLog||[]).map(c=>c.author+": "+c.text).join(" | ");rows.push([e.t,e.s,e.et,e.p,fmtDate(e),e.rg,e.loc,e.ppl,e.org,e.cu,e.cur,e.co,e.pd?"yes":"no",e.ln,(e.rel||"").replace(/\n/g," "),e.expLeads||"",(e.debrief||"").replace(/\n/g," "),e.hsLink||"",att,cmts.replace(/\n/g," "),`${subs.filter(s=>s.done).length}/${subs.length}`]);});
   const csv=rows.map(r=>r.map(c=>`"${(c==null?"":c).toString().replace(/"/g,'""')}"`).join(",")).join("\n");
   const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"})); a.download="field-marketing-events-2026.csv"; a.click();
 };
