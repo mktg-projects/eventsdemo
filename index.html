@@ -508,7 +508,7 @@ function openModal(id){
       for(const file of Array.from(fin.files)){
         st.textContent="Uploading "+file.name+"…";
         try{ const url=await uploadFile(file); e.files.push({name:file.name,url:url}); renderFiles(); st.textContent="Uploaded ✓ (Save to keep)"; }
-        catch(err){ st.textContent="Upload failed — is the 'attachments' bucket set up?"; }
+        catch(err){ const msg=(err&&err.message)?err.message:(""+err); st.textContent="Upload failed: "+msg; console.error("Upload error:", err); }
       }
       fin.value="";
     });
