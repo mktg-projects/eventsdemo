@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Events Board — DEMO</title>
+<style>
+:root { color-scheme: light; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f6f7f9; color: #1d2125; font-size: 14px; line-height: 1.4; }
+header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 18px; background: #fff; border-bottom: 1px solid #e3e6ea; position: sticky; top: 0; z-index: 20; }
+header h1 { font-size: 17px; font-weight: 650; margin-right: auto; }
+.sub { font-size: 12px; color: #7a838d; font-weight: 400; }
+.btn { border: none; border-radius: 7px; padding: 8px 13px; font-size: 13px; font-weight: 550; cursor: pointer; background: #e8eaed; color: #1d2125; transition: background .12s; }
+.btn:hover { background: #dde0e4; }
+.btn.primary { background: #4762ff; color: #fff; } .btn.primary:hover { background: #3850e6; }
+.btn.danger { background: #fbe9e9; color: #c0392b; } .btn.danger:hover { background: #f5d5d5; }
+.btn.sm { padding: 4px 9px; font-size: 12px; }
+input, textarea, select { font-family: inherit; font-size: 13px; border: 1px solid #d4d8dd; border-radius: 7px; padding: 8px 10px; width: 100%; background: #fff; color: #1d2125; }
+input:focus, textarea:focus, select:focus { outline: none; border-color: #4762ff; box-shadow: 0 0 0 2px #4762ff22; }
+textarea { resize: vertical; min-height: 56px; }
+label { display: block; font-size: 12px; font-weight: 600; color: #5c6772; margin: 0 0 4px; }
+.controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.controls select, .controls input { width: auto; min-width: 120px; }
+.statbar { display: flex; gap: 10px; flex-wrap: wrap; padding: 12px 18px 0; }
+.stat { background: #fff; border: 1px solid #e3e6ea; border-radius: 9px; padding: 8px 14px; font-size: 12px; color: #5c6772; }
+.stat b { display: block; font-size: 18px; color: #1d2125; }
+.board { display: flex; gap: 14px; padding: 14px 18px 22px; overflow-x: auto; align-items: flex-start; }
+.column { background: #eceef0; border-radius: 11px; width: 280px; min-width: 280px; flex-shrink: 0; display: flex; flex-direction: column; max-height: calc(100vh - 150px); }
+.col-head { display: flex; align-items: center; gap: 8px; padding: 12px 14px 8px; font-weight: 650; font-size: 13px; }
+.col-head .dot { width: 9px; height: 9px; border-radius: 50%; }
+.col-head .count { margin-left: auto; background: #d6d9dd; color: #5c6772; border-radius: 20px; padding: 1px 8px; font-size: 11px; font-weight: 600; }
+.col-body { padding: 0 10px 10px; overflow-y: auto; flex: 1; min-height: 40px; }
+.col-body.drag-over { background: #dfe3ff; border-radius: 8px; }
+.card { background: #fff; border: 1px solid #e3e6ea; border-radius: 9px; padding: 11px 12px; margin-bottom: 9px; cursor: grab; box-shadow: 0 1px 2px #0000000a; }
+.card:active { cursor: grabbing; } .card.dragging { opacity: .4; }
+.card .ttl { font-weight: 600; font-size: 13.5px; margin-bottom: 6px; word-break: break-word; }
+.card .line { font-size: 11.5px; color: #5c6772; margin-top: 3px; display: flex; gap: 5px; align-items: flex-start; }
+.card .meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; }
+.pill { font-size: 10.5px; font-weight: 600; border-radius: 20px; padding: 2px 8px; }
+.pill.region { background: #eef1f4; color: #3a4654; }
+.pill.cost { background: #eef6ee; color: #2f7d32; }
+.pill.cost.zero { background: #eef1f4; color: #7a838d; }
+.pill.part { background: #e7f0ff; color: #2f5fd6; }
+.avatar { width: 19px; height: 19px; border-radius: 50%; color: #fff; font-size: 9.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+.sub-summary { font-size: 11px; color: #7a838d; margin-top: 8px; display: flex; align-items: center; gap: 6px; }
+.sub-bar { flex: 1; height: 5px; background: #e3e6ea; border-radius: 4px; overflow: hidden; } .sub-bar > i { display: block; height: 100%; background: #4caf50; }
+.modal-bg { position: fixed; inset: 0; background: #0008; display: none; align-items: flex-start; justify-content: center; z-index: 50; overflow-y: auto; padding: 36px 16px; }
+.modal-bg.open { display: flex; }
+#draftBg { z-index: 60; }
+.modal { background: #fff; border-radius: 13px; width: 100%; max-width: 580px; padding: 22px; }
+.modal h2 { font-size: 16px; margin-bottom: 4px; } .modal .mh { font-size: 12px; color: #7a838d; margin-bottom: 16px; }
+.row { display: flex; gap: 12px; } .row > div { flex: 1; }
+.field { margin-bottom: 13px; }
+.modal-actions { display: flex; gap: 8px; margin-top: 6px; } .modal-actions .spacer { margin-left: auto; }
+.subtasks { border-top: 1px solid #eceef0; margin-top: 8px; padding-top: 12px; }
+.subtask-row { display: flex; align-items: center; gap: 6px; margin-bottom: 7px; }
+.subtask-row input[type=checkbox] { width: 16px; height: 16px; flex-shrink: 0; cursor: pointer; }
+.subtask-row .st-txt { flex: 1; min-width: 90px; } .subtask-row.done .st-txt input { text-decoration: line-through; color: #9aa3ac; }
+.subtask-row .st-owner { width: 150px; flex-shrink: 0; }
+.add-sub { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+.dir-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.empty { color: #9aa3ac; text-align: center; padding: 18px; font-size: 12px; }
+.hint { font-size: 11px; color: #9aa3ac; margin-top: 3px; }
+a.link { color: #4762ff; text-decoration: none; font-size: 12px; word-break: break-all; } a.link:hover { text-decoration: underline; }
+#calendar { padding: 4px 18px 24px; }
+.cal-head { display: flex; align-items: center; justify-content: center; gap: 16px; margin: 4px 0 14px; }
+.cal-head .mlabel { font-size: 16px; font-weight: 650; min-width: 180px; text-align: center; }
+.cal-dowrow { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 4px; }
+.cal-dow { font-size: 11px; font-weight: 600; color: #7a838d; text-align: center; padding: 2px 0; }
+.cal-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 6px; }
+.cal-bg { background: #fff; border: 1px solid #e3e6ea; border-radius: 8px; grid-row: 1 / -1; }
+.cal-bg.other { background: #f1f2f4; }
+.cal-bg.today { border-color: #4762ff; box-shadow: 0 0 0 1px #4762ff; }
+.cal-daynum { font-size: 11px; color: #7a838d; font-weight: 600; padding: 4px 6px; grid-row: 1; }
+.cal-bar { align-self: center; margin: 0 3px; font-size: 10.5px; line-height: 15px; color: #fff; border-radius: 4px; padding: 1px 7px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cal-undated { margin-top: 16px; font-size: 12px; }
+.cal-undated .chip { display: inline-block; background: #eceef0; color: #3a4654; border-radius: 14px; padding: 3px 10px; margin: 3px 4px 0 0; cursor: pointer; font-size: 11px; }
+#webinars { padding: 8px 18px 24px; }
+.web-grid { display: flex; flex-wrap: wrap; gap: 12px; }
+.web-card { background: #fff; border: 1px solid #e3e6ea; border-radius: 10px; padding: 13px 14px; width: 300px; cursor: pointer; box-shadow: 0 1px 2px #0000000a; }
+.web-card .ttl { font-weight: 600; font-size: 13.5px; margin-bottom: 7px; }
+.web-card .line { font-size: 12px; color: #5c6772; margin-top: 3px; }
+.pill.web-conf { background: #e7f0ff; color: #2f5fd6; }
+.pill.web-tent { background: #fff4e5; color: #b7791f; }
+.pill.web-done { background: #eef6ee; color: #2f7d32; }
+.web-month { font-weight: 650; font-size: 13px; color: #3a4654; margin: 14px 0 9px; padding-bottom: 5px; border-bottom: 1px solid #e3e6ea; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🧪 Events Board — DEMO <span class="sub">— dummy data for testing</span></h1>
+  <div class="controls">
+    <input id="search" placeholder="Search events..." style="min-width:160px">
+    <select id="filterRegion" title="Region"><option value="">All regions</option></select>
+    <select id="filterPerson" title="Person"><option value="">All people</option></select>
+  </div>
+  <span id="syncStatus" class="sub" style="margin-right:4px">●</span>
+  <span style="display:inline-flex;gap:3px;margin-right:4px">
+    <button class="btn sm view-tab primary" data-view="board">Board</button>
+    <button class="btn sm view-tab" data-view="calendar">Calendar</button>
+    <button class="btn sm view-tab" data-view="webinars">Webinars</button>
+  </span>
+  <button class="btn" id="reloadBtn" title="Refresh from server">↻</button>
+  <button class="btn" id="emailBtn">✉ Email tasks</button>
+  <button class="btn" id="exportBtn">Export CSV</button>
+  <button class="btn primary" id="newBtn">+ Event</button>
+</header>
+<div class="statbar" id="statbar"></div>
+<div class="board" id="board"></div>
+<div id="calendar" style="display:none"></div>
+<div id="webinars" style="display:none"></div>
+<div class="modal-bg" id="modalBg"><div class="modal" id="modal"></div></div>
+<div class="modal-bg" id="draftBg"><div class="modal" id="draftModal"></div></div>
+
+<script>
+const COLUMNS = [
+  { id: "attended",     name: "Attended",      color: "#4caf50" },
+  { id: "confirmed",    name: "Confirmed",     color: "#4762ff" },
+  { id: "tentative",    name: "Tentative",     color: "#e8a33d" },
+  { id: "toreview",     name: "To Review",     color: "#9b59b6" },
+  { id: "notattending", name: "Not Attending", color: "#9aa3ac" },
+];
+const STORE_KEY = "eventsBoard.v1";
+const SEED_VERSION = "2026-06-06.1";
+
+/* ───────────────────────────────────────────────────────────────────
+   SHARED DATABASE — paste your two Supabase values between the quotes.
+   (See the setup guide. Until BOTH are filled in, the board runs only
+   in your own browser; once filled, everyone with the link shares data.)
+   ─────────────────────────────────────────────────────────────────── */
+const SUPABASE_URL      = "https://fsnivznjsypkjpkpktfz.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_EZiPIN64ZY30Jz6R0O_CLQ_vV37Lx7H";
+/* ─────────────────────────────────────────────────────────────────── */
+
+const ROW_ID = "demo-board";
+const BOARD_URL = (location.origin && location.origin.indexOf("http")===0) ? location.origin + location.pathname : "";
+// Approx FX rates (USD per 1 unit), from the Field Marketing sheet. Tell me to update them anytime.
+const FX_RATES = { USD:1, EUR:1.17, GBP:1.35, SEK:0.109, DKK:0.147, NOK:0.097, CHF:1.21, CAD:0.73, AUD:0.66 };
+const CURRENCIES = ["", ...Object.keys(FX_RATES)];
+function resolveEmail(owner){
+  if(!owner) return "";
+  if(owner.indexOf("@")>-1) return owner.trim();
+  const m = (state && state.directory || []).find(p=>p.name.toLowerCase()===owner.trim().toLowerCase());
+  return (m && m.email) ? m.email : "";
+}
+const CONNECTED = /^https:\/\/.+\.supabase\.co/.test(SUPABASE_URL) && SUPABASE_ANON_KEY.length > 30;
+function sbHeaders(){ return { "apikey": SUPABASE_ANON_KEY, "Authorization": "Bearer "+SUPABASE_ANON_KEY, "Content-Type":"application/json" }; }
+async function sbLoad(){
+  const r = await fetch(SUPABASE_URL+"/rest/v1/board?id=eq."+ROW_ID+"&select=data,updated_at", { headers: sbHeaders() });
+  if(!r.ok) throw new Error("load "+r.status);
+  const rows = await r.json(); return rows[0] || null;
+}
+async function sbSave(data){
+  const r = await fetch(SUPABASE_URL+"/rest/v1/board?on_conflict=id", { method:"POST",
+    headers: Object.assign(sbHeaders(), { "Prefer":"resolution=merge-duplicates,return=minimal" }),
+    body: JSON.stringify([{ id: ROW_ID, data: data, updated_at: new Date().toISOString() }]) });
+  if(!r.ok) throw new Error("save "+r.status);
+}
+function setSync(text,color){ const el=document.getElementById("syncStatus"); if(el){ el.textContent="● "+text; el.style.color=color; } }
+const ATT_BUCKET = "attachments";
+async function uploadFile(file){
+  const path = ROW_ID + "/" + Date.now() + "_" + file.name.replace(/[^A-Za-z0-9._-]/g,"_");
+  const r = await fetch(SUPABASE_URL+"/storage/v1/object/"+ATT_BUCKET+"/"+path, {
+    method:"POST",
+    headers:{ "apikey":SUPABASE_ANON_KEY, "Authorization":"Bearer "+SUPABASE_ANON_KEY, "Content-Type":file.type||"application/octet-stream", "x-upsert":"true" },
+    body: file
+  });
+  if(!r.ok) throw new Error("upload "+r.status);
+  return SUPABASE_URL+"/storage/v1/object/public/"+ATT_BUCKET+"/"+path;
+}
+
+// Compact seed. Keys: t title, s status, et type, p participation, d dates,
+// rg region, loc location, ppl people attending, org organizer, cu costUSD,
+// cur currency, co costOriginal, pd paid, ln link, rel relevance, xs extra sub-events
+const SEED = [
+{t:"Spring Product Expo",s:"confirmed",et:"Tradeshow",p:"Attend + Booth",d:"12-13 Mar 2026",rg:"Europe",loc:"Berlin, Germany",ppl:"Alex, Sam",org:"Alex",cu:1404,cur:"EUR",co:1200,pd:false,ln:"https://example.com",rel:"Dummy event for testing.",xs:[{title:"Ship booth materials",done:false}]},
+{t:"Retail Tech Forum",s:"attended",et:"Conference",p:"Attend",d:"5 Feb 2026",rg:"America",loc:"New York, USA",ppl:"Jordan",org:"Jordan",cu:0,cur:"USD",co:0,pd:true,ln:"https://example.com",rel:"Dummy event for testing."},
+{t:"Materials Innovation Day",s:"attended",et:"Conference",p:"Speaking",d:"18 Feb 2026",rg:"Europe",loc:"Milan, Italy",ppl:"Taylor",org:"Taylor",cu:540,cur:"EUR",co:500,pd:true,ln:"",rel:"Dummy event."},
+{t:"Sustainability Roundtable",s:"confirmed",et:"Conference",p:"Attend",d:"20 Apr 2026",rg:"Europe",loc:"Amsterdam, Netherlands",ppl:"Morgan, Riley",org:"Morgan",cu:0,cur:"EUR",co:0,pd:false,ln:"https://example.com",rel:"Dummy event."},
+{t:"Global Supply Chain Summit",s:"tentative",et:"Conference",p:"Attend",d:"8-10 May 2026",rg:"America",loc:"Chicago, USA",ppl:"Jordan",org:"Jordan",cu:2025,cur:"GBP",co:1500,pd:false,ln:"",rel:"Multi-day dummy event."},
+{t:"Circular Economy Workshop",s:"tentative",et:"Customer Event",p:"Host own event",d:"3 Jun 2026",rg:"Europe",loc:"Stockholm, Sweden",ppl:"Sam",org:"Sam",cu:300,cur:"SEK",co:2800,pd:false,ln:"",rel:"Dummy event."},
+{t:"Apparel Sourcing Fair",s:"toreview",et:"Tradeshow",p:"Attend (TBD)",d:"15-17 Jul 2026",rg:"Europe",loc:"Munich, Germany",ppl:"TBD",org:"Alex",cu:null,cur:"EUR",co:0,pd:false,ln:"https://example.com",rel:"Dummy event."},
+{t:"Compliance & Trade Conference",s:"toreview",et:"Conference",p:"Attend (TBD)",d:"Sep 2026",rg:"America",loc:"Washington DC, USA",ppl:"Riley",org:"Riley",cu:0,cur:"USD",co:0,pd:false,ln:"",rel:"Dummy event."},
+{t:"Outdoor Brands Meetup",s:"notattending",et:"Conference",p:"Not attending",d:"2 Oct 2026",rg:"America",loc:"Denver, USA",ppl:"—",org:"Taylor",cu:0,cur:"USD",co:0,pd:false,ln:"https://example.com",rel:"Dummy event."},
+{t:"Year-End Industry Gala",s:"notattending",et:"Other",p:"Not attending",d:"20 Nov 2026",rg:"Europe",loc:"London, UK",ppl:"—",org:"Morgan",cu:0,cur:"GBP",co:0,pd:false,ln:"",rel:"Dummy event."},
+];
+
+const STD_PREP = ["Confirm registration / ticket","Book travel & accommodation","Roll-ups / banner","Brochures / collateral","Interview / podcast","Social media posts"];
+
+let state = null;
+
+function defaultDirectory(){
+  return ["Alex","Sam","Jordan","Taylor","Morgan","Riley"].map(n=>({name:n,email:""}));
+}
+function buildSeed() {
+  const events = SEED.map(e => {
+    const ev = Object.assign({ id: uid() }, e);
+    let subs = (e.xs || []).map(s => ({ id: uid(), title: s.title, done: !!s.done, owner: s.owner || "" }));
+    if (e.s !== "notattending") {
+      subs = subs.concat(STD_PREP.map(p => ({ id: uid(), title: p, done: e.s === "attended" && !/interview|social/i.test(p), owner: "" })));
+    }
+    ev.subtasks = subs; delete ev.xs;
+    return ev;
+  });
+  return { version: SEED_VERSION, events, directory: defaultDirectory() };
+}
+function load() {
+  try {
+    const d = JSON.parse(localStorage.getItem(STORE_KEY));
+    if (d && d.version === SEED_VERSION && d.events) { if(!d.directory) d.directory = defaultDirectory(); return d; }
+  } catch(e){}
+  const st = buildSeed(); try { localStorage.setItem(STORE_KEY, JSON.stringify(st)); } catch(e){} return st;
+}
+
+let lastSyncedJSON = "";
+let saveTimer = null;
+
+function save(){
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch(e){}
+  if(!CONNECTED) return;
+  setSync("Saving…","#b7791f");
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async ()=>{
+    try { await sbSave(state); lastSyncedJSON = JSON.stringify(state); saveTimer = null; setSync("Synced — shared","#2f7d32"); }
+    catch(e){ saveTimer = null; setSync("Save failed — retrying","#c0392b"); setTimeout(save, 4000); }
+  }, 700);
+}
+
+async function poll(){
+  if(!CONNECTED || saveTimer) return;
+  if(document.getElementById("modalBg").classList.contains("open")) return;
+  if(document.getElementById("draftBg").classList.contains("open")) return;
+  try {
+    const row = await sbLoad();
+    if(row && JSON.stringify(row.data) !== lastSyncedJSON){
+      state = row.data; if(!state.directory) state.directory = defaultDirectory();
+      lastSyncedJSON = JSON.stringify(state); render(); setSync("Synced — shared","#2f7d32");
+    }
+  } catch(e){}
+}
+
+function openFromHash(){
+  const m=(location.hash||"").match(/event=([A-Za-z0-9]+)/);
+  if(m && state && state.events.find(e=>e.id===m[1])) openModal(m[1]);
+}
+async function init(){
+  if(CONNECTED){
+    setSync("Connecting…","#b7791f");
+    try {
+      let row = await sbLoad();
+      if(!row){ state = buildSeed(); await sbSave(state); }
+      else { state = row.data; }
+      if(!state.directory) state.directory = defaultDirectory();
+      if(backfillDates()){ try{ await sbSave(state); }catch(e){} }
+      lastSyncedJSON = JSON.stringify(state);
+      render(); openFromHash(); setSync("Synced — shared","#2f7d32");
+      setInterval(poll, 12000);
+      return;
+    } catch(e){ setSync("Can't reach server — local only","#c0392b"); }
+  } else {
+    setSync("Local only — not connected","#b7791f");
+  }
+  state = load(); if(backfillDates()) save(); render(); openFromHash();
+}
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function escapeHtml(s){ return (s||"").toString().replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+function money(e){ if(e.cu===null||e.cu===undefined) return "TBD"; return "$"+Number(e.cu).toLocaleString(); }
+function avatarColor(str){ let h=0; for(let i=0;i<str.length;i++) h=str.charCodeAt(i)+((h<<5)-h); return `hsl(${Math.abs(h)%360} 55% 48%)`; }
+function firstPerson(p){ if(!p||p==="—"||p==="TBD") return ""; return p.split(/[,+]/)[0].trim(); }
+function initials(n){ const x=n.split(/\s+/); return ((x[0]?.[0]||"")+(x[1]?.[0]||"")).toUpperCase()||n[0]?.toUpperCase()||"?"; }
+
+let prefs = { region:"", person:"", search:"" };
+let viewMode = "board";
+function passFilters(e){
+  if(prefs.region && e.rg!==prefs.region) return false;
+  if(prefs.person && !(e.ppl||"").toLowerCase().includes(prefs.person.toLowerCase())) return false;
+  const q=(prefs.search||"").toLowerCase();
+  if(q && !((e.t||"")+" "+(e.loc||"")+" "+(e.rel||"")).toLowerCase().includes(q)) return false;
+  return true;
+}
+const MONTHS={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+function parseDates(e){
+  if(e.start){ const s=new Date(e.start+"T00:00:00"); const en=(e.end)?new Date(e.end+"T00:00:00"):s; return {s:s, e:isNaN(en)?s:en}; }
+  const txt=e.d||""; let m;
+  if((m=txt.match(/(\d{1,2})\s*[-–]\s*(\d{1,2})\s+([A-Za-z]{3,})\.?\s+(\d{4})/))){ const mo=MONTHS[m[3].slice(0,3).toLowerCase()]; if(mo!=null) return {s:new Date(+m[4],mo,+m[1]), e:new Date(+m[4],mo,+m[2])}; }
+  if((m=txt.match(/(\d{1,2})\s+([A-Za-z]{3,})\.?\s+(\d{4})/))){ const mo=MONTHS[m[2].slice(0,3).toLowerCase()]; if(mo!=null){ const d=new Date(+m[3],mo,+m[1]); return {s:d,e:d}; } }
+  if((m=txt.match(/([A-Za-z]{3,})\.?\s+(\d{4})/))){ const mo=MONTHS[m[1].slice(0,3).toLowerCase()]; if(mo!=null){ const d=new Date(+m[2],mo,1); return {s:d,e:d}; } }
+  return null;
+}
+function statusColor(s){ const c=COLUMNS.find(x=>x.id===s); return c?c.color:"#9aa3ac"; }
+function sameDay(a,b){ return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate(); }
+function toISO(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function fmtDate(e){
+  if(e.start){ const s=new Date(e.start+"T00:00:00"); const en=e.end?new Date(e.end+"T00:00:00"):s;
+    if(sameDay(s,en)) return s.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"});
+    if(s.getMonth()===en.getMonth()&&s.getFullYear()===en.getFullYear()) return s.getDate()+"–"+en.getDate()+" "+s.toLocaleDateString(undefined,{month:"short",year:"numeric"});
+    return s.toLocaleDateString(undefined,{day:"numeric",month:"short"})+" – "+en.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"}); }
+  return e.d || "Date TBD";
+}
+function backfillDates(){ let ch=false; state.events.forEach(ev=>{ if(!ev.start){ const dt=parseDates(ev); if(dt){ ev.start=toISO(dt.s); if(!sameDay(dt.s,dt.e)) ev.end=toISO(dt.e); ch=true; } } }); if(!Array.isArray(state.webinars)){ state.webinars=seedWebinars(); ch=true; } return ch; }
+function seedWebinars(){
+  const W=[
+   ["Welcome Webinar","Feb","10","Product Launch","Overview","Confirmed","General","Alex","","Newsletter","120","Dummy webinar"],
+   ["Deep Dive: Features","Apr","","Demo","Product","Confirmed","Customers","Sam","","Social posts","90","Dummy webinar"],
+   ["Industry Trends Panel","Jun","","Panel","Trends","Tentative","General","Jordan","","Newsletter","150","Dummy webinar"],
+   ["Year-End Review","Nov","","Thought Leadership","Wrap-up","Tentative","General","Taylor","","","80","Dummy webinar"],
+  ];
+  return W.map(r=>({id:uid(),title:r[0],month:r[1],date:r[2],type:r[3],topic:r[4],status:r[5],audience:r[6],lead:r[7],deps:r[8],promo:r[9],reg:r[10],notes:r[11]}));
+}
+let calMonth = new Date(2026,5,1);
+function renderCalendar(){
+  const cal=document.getElementById("calendar");
+  const evs=state.events.filter(passFilters).map(e=>({e:e,dt:parseDates(e)}));
+  const dated=evs.filter(x=>x.dt), undated=evs.filter(x=>!x.dt);
+  const y=calMonth.getFullYear(), mo=calMonth.getMonth();
+  const startIdx=(new Date(y,mo,1).getDay()+6)%7;
+  const daysInMonth=new Date(y,mo+1,0).getDate();
+  const today=new Date();
+  const totalCells=Math.ceil((startIdx+daysInMonth)/7)*7;
+  const numWeeks=totalCells/7;
+  const DAY=86400000;
+  let html=`<div class="cal-head"><button class="btn sm" id="cal-prev">◀</button><div class="mlabel">${new Date(y,mo,1).toLocaleString(undefined,{month:"long",year:"numeric"})}</div><button class="btn sm" id="cal-next">▶</button><button class="btn sm" id="cal-today">Today</button></div>`;
+  html+=`<div class="cal-dowrow">`+["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d=>`<div class="cal-dow">${d}</div>`).join("")+`</div>`;
+  for(let w=0; w<numWeeks; w++){
+    const firstDayNum=(w*7)-startIdx+1;
+    const weekStart=new Date(y,mo,firstDayNum);
+    const weekEnd=new Date(y,mo,firstDayNum+6);
+    const segs=[];
+    dated.forEach(x=>{
+      const s=new Date(x.dt.s.getFullYear(),x.dt.s.getMonth(),x.dt.s.getDate());
+      const en=new Date(x.dt.e.getFullYear(),x.dt.e.getMonth(),x.dt.e.getDate());
+      if(en>=weekStart && s<=weekEnd){
+        const cs=Math.max(0, Math.round((s-weekStart)/DAY));
+        const ce=Math.min(6, Math.round((en-weekStart)/DAY));
+        segs.push({x:x, cs:cs, ce:ce});
+      }
+    });
+    segs.sort((a,b)=> a.cs-b.cs || (b.ce-b.cs)-(a.ce-a.cs));
+    const lanes=[];
+    segs.forEach(seg=>{
+      let lane=0;
+      while((lanes[lane]||[]).some(r=>!(seg.ce<r[0]||seg.cs>r[1]))) lane++;
+      (lanes[lane]=lanes[lane]||[]).push([seg.cs,seg.ce]); seg.lane=lane;
+    });
+    const rows=Math.max(lanes.length,3);
+    html+=`<div class="cal-week" style="grid-template-rows:24px repeat(${rows},18px)">`;
+    for(let c=0;c<7;c++){
+      const cellDate=new Date(y,mo,firstDayNum+c); const inMonth=cellDate.getMonth()===mo;
+      html+=`<div class="cal-bg${inMonth?"":" other"}${inMonth&&sameDay(cellDate,today)?" today":""}" style="grid-column:${c+1};grid-row:1/-1"></div>`;
+      html+=`<div class="cal-daynum" style="grid-column:${c+1}">${cellDate.getDate()}</div>`;
+    }
+    segs.forEach(seg=>{
+      const span=seg.ce-seg.cs+1;
+      html+=`<div class="cal-bar" data-id="${seg.x.e.id}" title="${escapeHtml(seg.x.e.t+' · '+fmtDate(seg.x.e))}" style="grid-column:${seg.cs+1}/span ${span};grid-row:${seg.lane+2};background:${statusColor(seg.x.e.s)}">${escapeHtml(seg.x.e.t)}</div>`;
+    });
+    html+=`</div>`;
+  }
+  if(undated.length) html+=`<div class="cal-undated"><b>No date yet:</b> `+undated.map(x=>`<span class="chip" data-id="${x.e.id}">${escapeHtml(x.e.t)}</span>`).join("")+`</div>`;
+  cal.innerHTML=html;
+  document.getElementById("cal-prev").onclick=()=>{ calMonth=new Date(y,mo-1,1); renderCalendar(); };
+  document.getElementById("cal-next").onclick=()=>{ calMonth=new Date(y,mo+1,1); renderCalendar(); };
+  document.getElementById("cal-today").onclick=()=>{ const t=new Date(); calMonth=new Date(t.getFullYear(),t.getMonth(),1); renderCalendar(); };
+  cal.querySelectorAll(".cal-bar,.chip").forEach(el=>el.onclick=()=>openModal(el.dataset.id));
+}
+
+function allRegions(){ return [...new Set(state.events.map(e=>e.rg).filter(Boolean))].sort(); }
+function allPeople(){
+  const set=new Set();
+  state.events.forEach(e=>{ (e.ppl||"").split(/[,+]/).forEach(p=>{ p=p.trim(); if(p&&p!=="—"&&p!=="TBD"&&!/team|brand|invites|tickets|complimentary|ticket/i.test(p)) set.add(p); }); });
+  return [...set].sort();
+}
+
+function render() {
+  document.getElementById("board").style.display = viewMode==="board"?"flex":"none";
+  document.getElementById("calendar").style.display = viewMode==="calendar"?"block":"none";
+  document.getElementById("webinars").style.display = viewMode==="webinars"?"block":"none";
+  if(viewMode==="calendar"){ renderStats(); refreshFilters(); renderCalendar(); return; }
+  if(viewMode==="webinars"){ renderStats(); refreshFilters(); renderWebinars(); return; }
+  const board = document.getElementById("board");
+  board.innerHTML = "";
+  const q = prefs.search.toLowerCase();
+  COLUMNS.forEach(col => {
+    let evs = state.events.filter(e=>e.s===col.id);
+    if (prefs.region) evs = evs.filter(e=>e.rg===prefs.region);
+    if (prefs.person) evs = evs.filter(e=>(e.ppl||"").toLowerCase().includes(prefs.person.toLowerCase()));
+    if (q) evs = evs.filter(e=>(e.t+" "+e.loc+" "+(e.rel||"")).toLowerCase().includes(q));
+    const colEl=document.createElement("div"); colEl.className="column";
+    colEl.innerHTML=`<div class="col-head"><span class="dot" style="background:${col.color}"></span>${col.name}<span class="count">${evs.length}</span></div>`;
+    const body=document.createElement("div"); body.className="col-body"; body.dataset.col=col.id;
+    if(!evs.length) body.innerHTML=`<div class="empty">None</div>`;
+    evs.forEach(e=>body.appendChild(card(e)));
+    colEl.appendChild(body); board.appendChild(colEl);
+    body.addEventListener("dragover",ev=>{ev.preventDefault();body.classList.add("drag-over");});
+    body.addEventListener("dragleave",()=>body.classList.remove("drag-over"));
+    body.addEventListener("drop",ev=>{ev.preventDefault();body.classList.remove("drag-over");const id=ev.dataTransfer.getData("text/plain");const e=state.events.find(x=>x.id===id);if(e){e.s=col.id;save();render();}});
+  });
+  renderStats(); refreshFilters();
+}
+
+function renderStats(){
+  const bar=document.getElementById("statbar");
+  const committed=state.events.filter(e=>["attended","confirmed"].includes(e.s)).reduce((a,e)=>a+(e.cu||0),0);
+  const planned=state.events.reduce((a,e)=>a+(e.cu||0),0);
+  const c=s=>state.events.filter(e=>e.s===s).length;
+  bar.innerHTML=`
+    <div class="stat">Total events<b>${state.events.length}</b></div>
+    <div class="stat">Attended<b>${c("attended")}</b></div>
+    <div class="stat">Confirmed<b>${c("confirmed")}</b></div>
+    <div class="stat">Tentative / Review<b>${c("tentative")+c("toreview")}</b></div>
+    <div class="stat">Committed cost (att.+conf.)<b>$${committed.toLocaleString()}</b></div>
+    <div class="stat">All-in planned cost<b>$${planned.toLocaleString()}</b></div>`;
+}
+
+function card(e){
+  const el=document.createElement("div"); el.className="card"; el.draggable=true;
+  const subs=e.subtasks||[]; const done=subs.filter(s=>s.done).length; const pct=subs.length?Math.round(done/subs.length*100):0;
+  const fp=firstPerson(e.ppl);
+  el.innerHTML=`
+    <div class="ttl">${escapeHtml(e.t)}</div>
+    <div class="line">📅 ${escapeHtml(fmtDate(e))}</div>
+    <div class="line">📍 ${escapeHtml(e.loc||"—")}</div>
+    ${e.ppl&&e.ppl!=="—"?`<div class="line">👤 ${escapeHtml(e.ppl)}</div>`:""}
+    ${(()=>{const hf=e.att||(e.files&&e.files.length);const nc=(e.commentLog&&e.commentLog.length)||0;return (hf||nc)?`<div class="line">${hf?"📎 files":""}${hf&&nc?" · ":""}${nc?"💬 "+nc:""}</div>`:"";})()}
+    <div class="meta">
+      ${e.rg?`<span class="pill region">${escapeHtml(e.rg)}</span>`:""}
+      <span class="pill cost ${(!e.cu)?'zero':''}">${money(e)}${e.pd?" ✓paid":""}</span>
+      ${fp?`<span class="avatar" style="background:${avatarColor(fp)}" title="${escapeHtml(e.ppl)}">${initials(fp)}</span>`:""}
+    </div>
+    ${subs.length?`<div class="sub-summary">✓ ${done}/${subs.length}<span class="sub-bar"><i style="width:${pct}%"></i></span></div>`:""}`;
+  el.addEventListener("dragstart",ev=>{ev.dataTransfer.setData("text/plain",e.id);el.classList.add("dragging");});
+  el.addEventListener("dragend",()=>el.classList.remove("dragging"));
+  el.addEventListener("click",()=>openModal(e.id));
+  return el;
+}
+
+function blank(){ return {id:uid(),t:"",s:"tentative",et:"",p:"",d:"",start:"",end:"",rg:"",loc:"",ppl:"",org:"",cu:0,cur:"USD",co:0,pd:false,ln:"",rel:"",att:"",files:[],commentLog:[],subtasks:[]}; }
+
+function openModal(id){
+  const isNew=!id;
+  const e=isNew?blank():JSON.parse(JSON.stringify(state.events.find(x=>x.id===id)));
+  const m=document.getElementById("modal");
+  const curList = CURRENCIES.includes(e.cur) ? CURRENCIES : [e.cur, ...CURRENCIES];
+  const curOpts = curList.map(cx=>`<option value="${escapeHtml(cx)}" ${e.cur===cx?"selected":""}>${cx||"— none —"}</option>`).join("");
+  m.innerHTML=`
+    <h2>${isNew?"New Event":"Edit Event"}</h2><div class="mh">All fields editable. Drag cards between columns to change status.</div>
+    <div class="field"><label>Event name</label><input id="f-t" value="${escapeHtml(e.t)}"></div>
+    <div class="row">
+      <div class="field"><label>Status</label><select id="f-s">${COLUMNS.map(c=>`<option value="${c.id}" ${e.s===c.id?"selected":""}>${c.name}</option>`).join("")}</select></div>
+      <div class="field"><label>Event type</label><input id="f-et" value="${escapeHtml(e.et)}"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Start date</label><input id="f-start" type="date" value="${escapeHtml(e.start||'')}"></div>
+      <div class="field"><label>End date (optional)</label><input id="f-end" type="date" value="${escapeHtml(e.end||'')}"></div>
+      <div class="field"><label>Participation</label><input id="f-p" value="${escapeHtml(e.p)}"></div>
+    </div>
+    <div class="hint" style="margin-top:-6px;margin-bottom:13px">📅 These dates place the event on the Calendar and show on its card. For a multi-day event set both; single-day, just Start.</div>
+    <div class="row">
+      <div class="field"><label>Region</label><input id="f-rg" value="${escapeHtml(e.rg)}"></div>
+      <div class="field"><label>Location</label><input id="f-loc" value="${escapeHtml(e.loc)}"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>People attending</label><input id="f-ppl" value="${escapeHtml(e.ppl)}"></div>
+      <div class="field"><label>Organizer / owner</label><input id="f-org" value="${escapeHtml(e.org)}"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Cost (USD)</label><input id="f-cu" type="number" value="${e.cu===null?'':e.cu}"></div>
+      <div class="field"><label>Currency</label><select id="f-cur">${curOpts}</select></div>
+      <div class="field"><label>Original cost</label><input id="f-co" type="number" value="${e.co===null?'':e.co}"></div>
+    </div>
+    <div class="hint" style="margin-top:-6px;margin-bottom:13px">💱 Enter the <b>Original cost</b> and pick a <b>Currency</b>, and <b>Cost (USD)</b> fills in automatically — that USD figure is what the board's spend totals use. Type over it only if you need an exact amount.</div>
+    <div class="field"><label><input type="checkbox" id="f-pd" ${e.pd?"checked":""} style="width:auto;display:inline;margin-right:6px">Paid</label></div>
+    <div class="field"><label>Link / debrief</label><input id="f-ln" value="${escapeHtml(e.ln)}">${e.ln&&/^https?:/.test(e.ln)?`<div style="margin-top:5px"><a class="link" href="${escapeHtml(e.ln)}" target="_blank">↗ open</a></div>`:""}</div>
+    <div class="field"><label>Relevance & key focus / notes</label><textarea id="f-rel">${escapeHtml(e.rel)}</textarea></div>
+    <div class="field"><label>Attachments</label>
+      <input id="f-att" value="${escapeHtml(e.att||'')}" placeholder="Paste a link (SharePoint / Drive folder)…">
+      <div style="display:flex;align-items:center;gap:8px;margin-top:6px"><input type="file" id="f-file" multiple style="font-size:12px;flex:1"><span id="f-upstatus" class="hint"></span></div>
+      <div id="file-list" style="margin-top:6px"></div>
+    </div>
+    <div class="field"><label>Comments / updates <span class="hint" style="display:inline;margin:0">(saved when you click Save)</span></label>
+      <div id="comment-log" style="max-height:150px;overflow:auto;border:1px solid #eceef0;border-radius:7px;padding:8px;margin-bottom:6px"></div>
+      <div class="add-sub"><input id="c-name" placeholder="your name" style="width:120px"><input id="c-text" placeholder="Add a comment…" style="flex:1;min-width:140px"><button class="btn sm" id="c-add">Post</button></div>
+    </div>
+    <div class="subtasks"><label>Subtasks (prep & linked sub-events) — add an owner email, then ✉ to notify them</label><div id="sub-list"></div>
+      <div class="add-sub"><input id="new-sub" placeholder="Add a subtask..." style="flex:1;min-width:140px"><input id="new-sub-owner" placeholder="owner: name or email" style="width:180px"><button class="btn sm" id="add-sub-btn">Add</button></div></div>
+    <div class="modal-actions">
+      ${isNew?"":`<button class="btn danger" id="del-btn">Delete</button>`}
+      <span class="spacer"></span><button class="btn" id="cancel-btn">Cancel</button><button class="btn primary" id="save-btn">Save</button>
+    </div>`;
+  document.getElementById("modalBg").classList.add("open");
+  (function(){
+    const fco=document.getElementById("f-co"), fcur=document.getElementById("f-cur"), fcu=document.getElementById("f-cu");
+    function autoUSD(){
+      const orig=parseFloat(fco.value); const cur=(fcur.value||"").toUpperCase().trim();
+      if(!isNaN(orig) && FX_RATES[cur]!==undefined) fcu.value = Math.round(orig*FX_RATES[cur]);
+    }
+    fco.addEventListener("input",autoUSD); fcur.addEventListener("change",autoUSD);
+  })();
+  (function(){
+    if(!Array.isArray(e.files)) e.files=[];
+    const list=document.getElementById("file-list"), fin=document.getElementById("f-file"), st=document.getElementById("f-upstatus");
+    function renderFiles(){
+      list.innerHTML = e.files.length ? e.files.map((f,i)=>`<div class="line" style="justify-content:space-between"><a class="link" href="${escapeHtml(f.url)}" target="_blank">📎 ${escapeHtml(f.name)}</a><button class="btn sm danger" data-i="${i}">✕</button></div>`).join("") : "";
+      list.querySelectorAll("button").forEach(b=>b.onclick=()=>{e.files.splice(+b.dataset.i,1);renderFiles();});
+    }
+    renderFiles();
+    fin.addEventListener("change", async ()=>{
+      if(!CONNECTED){ st.textContent="Connect the database to upload files."; fin.value=""; return; }
+      for(const file of Array.from(fin.files)){
+        st.textContent="Uploading "+file.name+"…";
+        try{ const url=await uploadFile(file); e.files.push({name:file.name,url:url}); renderFiles(); st.textContent="Uploaded ✓ (Save to keep)"; }
+        catch(err){ st.textContent="Upload failed — is the 'attachments' bucket set up?"; }
+      }
+      fin.value="";
+    });
+  })();
+  (function(){
+    if(!Array.isArray(e.commentLog)) e.commentLog=[];
+    const log=document.getElementById("comment-log"), cname=document.getElementById("c-name"), ctext=document.getElementById("c-text");
+    cname.value = localStorage.getItem("boardUser")||"";
+    function renderLog(){
+      log.innerHTML = e.commentLog.length ? e.commentLog.slice().reverse().map(cm=>`<div style="margin-bottom:8px"><div style="font-size:11px;color:#7a838d"><b>${escapeHtml(cm.author||"—")}</b> · ${new Date(cm.ts).toLocaleString(undefined,{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})}</div><div style="white-space:pre-wrap">${escapeHtml(cm.text)}</div></div>`).join("") : `<div class="hint">No comments yet.</div>`;
+    }
+    renderLog();
+    document.getElementById("c-add").onclick=()=>{
+      const t=ctext.value.trim(); if(!t) return;
+      const nm=cname.value.trim(); if(nm) localStorage.setItem("boardUser",nm);
+      e.commentLog.push({author:nm||"Anon", text:t, ts:Date.now()});
+      ctext.value=""; renderLog();
+    };
+    ctext.addEventListener("keydown",ev=>{ if(ev.key==="Enter"){ ev.preventDefault(); document.getElementById("c-add").click(); }});
+  })();
+  function renderSubs(){
+    const list=document.getElementById("sub-list"); list.innerHTML="";
+    if(!e.subtasks.length) list.innerHTML=`<div class="hint">No subtasks.</div>`;
+    e.subtasks.forEach((s,i)=>{
+      if(s.owner===undefined) s.owner="";
+      const row=document.createElement("div"); row.className="subtask-row"+(s.done?" done":"");
+      row.innerHTML=`<input type="checkbox" ${s.done?"checked":""}><span class="st-txt"><input value="${escapeHtml(s.title)}"></span><input class="st-owner" placeholder="owner (name or email)" value="${escapeHtml(s.owner)}"><button class="btn sm st-mail" title="Email this task to the owner">✉</button><button class="btn sm danger">✕</button>`;
+      const cb=row.querySelector("input[type=checkbox]"), txt=row.querySelector(".st-txt input"), own=row.querySelector(".st-owner"), mail=row.querySelector(".st-mail"), del=row.querySelector(".danger");
+      cb.addEventListener("change",()=>{s.done=cb.checked;renderSubs();});
+      txt.addEventListener("input",()=>s.title=txt.value);
+      own.addEventListener("input",()=>s.owner=own.value.trim());
+      mail.addEventListener("click",()=>emailTask(e,s));
+      del.addEventListener("click",()=>{e.subtasks.splice(i,1);renderSubs();});
+      list.appendChild(row);
+    });
+  }
+  renderSubs();
+  document.getElementById("add-sub-btn").onclick=()=>{const v=document.getElementById("new-sub").value.trim();if(!v)return;const ow=document.getElementById("new-sub-owner").value.trim();e.subtasks.push({id:uid(),title:v,done:false,owner:ow});document.getElementById("new-sub").value="";document.getElementById("new-sub-owner").value="";renderSubs();};
+  document.getElementById("new-sub").addEventListener("keydown",ev=>{if(ev.key==="Enter"){ev.preventDefault();document.getElementById("add-sub-btn").click();}});
+  document.getElementById("cancel-btn").onclick=closeModal;
+  if(!isNew) document.getElementById("del-btn").onclick=()=>{if(confirm("Delete this event?")){state.events=state.events.filter(x=>x.id!==e.id);save();closeModal();render();}};
+  document.getElementById("save-btn").onclick=()=>{
+    e.t=document.getElementById("f-t").value.trim(); if(!e.t){alert("Enter an event name.");return;}
+    e.s=document.getElementById("f-s").value; e.et=document.getElementById("f-et").value;
+    e.start=document.getElementById("f-start").value; e.end=document.getElementById("f-end").value;
+    e.p=document.getElementById("f-p").value; e.rg=document.getElementById("f-rg").value; e.loc=document.getElementById("f-loc").value;
+    e.ppl=document.getElementById("f-ppl").value; e.org=document.getElementById("f-org").value;
+    const cuv=document.getElementById("f-cu").value; e.cu=cuv===""?null:Number(cuv);
+    e.cur=document.getElementById("f-cur").value; const cov=document.getElementById("f-co").value; e.co=cov===""?null:Number(cov);
+    e.pd=document.getElementById("f-pd").checked; e.ln=document.getElementById("f-ln").value; e.rel=document.getElementById("f-rel").value;
+    e.att=document.getElementById("f-att").value.trim();
+    const idx=state.events.findIndex(x=>x.id===e.id); if(idx>=0) state.events[idx]=e; else state.events.push(e);
+    save(); closeModal(); render();
+  };
+}
+function closeModal(){ document.getElementById("modalBg").classList.remove("open"); }
+
+function emailTask(e, s){
+  if(!s.owner){ alert("Add an owner (name or email) on this subtask first, then click ✉."); return; }
+  const to = resolveEmail(s.owner);
+  if(!to){ alert('No email found for "'+s.owner+'". Add their email in ✉ Email tasks, or type the full email address here.'); return; }
+  const subject = `[TrusTrace Field Marketing] Task assigned: ${s.title}`;
+  const body =
+`Hi,
+
+You've been assigned a task for our 2026 field-marketing event:
+
+  Event:    ${e.t}
+  Dates:    ${e.d || "TBD"}
+  Location: ${e.loc || "TBD"}
+  Status:   ${e.s}
+
+  Your task: ${s.title}
+
+When it's done, open the task and tick it off:
+${BOARD_URL ? BOARD_URL+"#event="+e.id : "(the shared events board)"}
+
+Thanks!`;
+  showDraft(to, subject, body);
+}
+
+function personEvents(name){
+  return state.events.filter(e=> e.s!=="notattending" && (e.ppl||"").toLowerCase().includes(name.toLowerCase()));
+}
+function composePersonEmail(p){
+  const evs = personEvents(p.name);
+  if(!evs.length){ alert(`${p.name} isn't listed as attending any active events.`); return; }
+  let body = `Hi ${p.name},\n\nHere are your TrusTrace field-marketing events and the prep still outstanding. Please action your items and let me know when each is done so I can update the board.\n\n`;
+  evs.forEach(e=>{
+    body += `* ${e.t} — ${e.d||"TBD"}${e.loc?", "+e.loc:""}  [${e.s}]\n`;
+    const out=(e.subtasks||[]).filter(s=>!s.done);
+    if(out.length) out.forEach(s=> body += `    [ ] ${s.title}${resolveEmail(s.owner).toLowerCase()===(p.email||"").toLowerCase() && p.email ?"  (you)":""}\n`);
+    else body += `    (all prep complete)\n`;
+    body += `\n`;
+  });
+  body += `When something's done, open the board and tick it off:\n${BOARD_URL || "(the shared events board)"}\n\nThanks!`;
+  showDraft(p.email||"", "[TrusTrace] Your field-marketing events & outstanding tasks", body);
+}
+function showDraft(to, subject, body){
+  const dm=document.getElementById("draftModal");
+  dm.innerHTML=`<h2>Email draft</h2>
+    <div class="mh">Click <b>Open in Outlook</b> to launch a pre-filled email${to?` to <b>${escapeHtml(to)}</b>`:""} in Outlook on the web (sends from your own mailbox — just press Send). Use <b>Other mail app</b> or <b>Copy</b> if you don't use Outlook.</div>
+    <div class="field"><label>To</label><input id="dr-to" value="${escapeHtml(to)}"></div>
+    <div class="field"><label>Subject</label><input id="dr-subj" value="${escapeHtml(subject)}"></div>
+    <div class="field"><label>Message</label><textarea id="dr-body" style="min-height:240px">${escapeHtml(body)}</textarea></div>
+    <div class="modal-actions"><button class="btn primary" id="dr-open">Open in Outlook</button><button class="btn" id="dr-open2">Other mail app</button><button class="btn" id="dr-copy">Copy message</button><span class="spacer"></span><button class="btn" id="dr-close">Close</button></div>`;
+  document.getElementById("draftBg").classList.add("open");
+  document.getElementById("dr-close").onclick=()=>document.getElementById("draftBg").classList.remove("open");
+  function copy(text, btn){
+    let ok=false;
+    const ta=document.getElementById("dr-body"); ta.focus(); ta.select();
+    try{ ok=document.execCommand("copy"); }catch(e){}
+    if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(()=>{},()=>{}); }
+    btn.textContent = ok ? "Copied ✓" : "Select text & press Ctrl/Cmd+C";
+    setTimeout(()=>btn.textContent=btn.dataset.label, 2600);
+  }
+  const cb=document.getElementById("dr-copy"); cb.dataset.label="Copy message"; cb.onclick=()=>copy(body,cb);
+  document.getElementById("dr-open").onclick=()=>{
+    const to=document.getElementById("dr-to").value, su=document.getElementById("dr-subj").value, bo=document.getElementById("dr-body").value;
+    window.open("https://outlook.office.com/mail/deeplink/compose?to="+encodeURIComponent(to)+"&subject="+encodeURIComponent(su)+"&body="+encodeURIComponent(bo), "_blank");
+  };
+  document.getElementById("dr-open2").onclick=()=>{
+    const to=document.getElementById("dr-to").value, su=document.getElementById("dr-subj").value, bo=document.getElementById("dr-body").value;
+    const a=document.createElement("a"); a.href="mailto:"+to+"?subject="+encodeURIComponent(su)+"&body="+encodeURIComponent(bo);
+    document.body.appendChild(a); a.click(); a.remove();
+  };
+}
+function openEmailCenter(){
+  const m=document.getElementById("modal");
+  const rows = state.directory.map((p,i)=>{
+    const evs = personEvents(p.name);
+    const out = evs.reduce((a,e)=>a+(e.subtasks||[]).filter(s=>!s.done).length,0);
+    return `<div class="dir-row" data-i="${i}">
+       <input class="d-name" value="${escapeHtml(p.name)}" style="width:100px">
+       <input class="d-email" value="${escapeHtml(p.email)}" placeholder="email@trustrace.com" style="flex:1">
+       <span class="hint" style="width:110px;text-align:right">${evs.length} events · ${out} to-dos</span>
+       <button class="btn sm primary d-send" title="Open a pre-filled email">✉</button>
+       <button class="btn sm danger d-del">✕</button>
+     </div>`;
+  }).join("");
+  m.innerHTML = `<h2>Email tasks to owners</h2>
+    <div class="mh">Fill in each person's email once (it's saved). Click ✉ to open a pre-filled email listing every event they're on and the prep still outstanding — then just hit send.</div>
+    <div id="dir-list">${rows || '<div class="hint">No people yet.</div>'}</div>
+    <div class="add-sub" style="margin-top:10px"><input id="d-new-name" placeholder="Name" style="width:100px"><input id="d-new-email" placeholder="email (optional)" style="flex:1"><button class="btn sm" id="d-add">Add person</button></div>
+    <div class="modal-actions"><span class="spacer"></span><button class="btn" id="d-close">Close</button></div>`;
+  document.getElementById("modalBg").classList.add("open");
+  m.querySelectorAll(".dir-row").forEach(row=>{
+    const i=+row.dataset.i;
+    row.querySelector(".d-name").addEventListener("input",e=>{state.directory[i].name=e.target.value;save();});
+    row.querySelector(".d-email").addEventListener("input",e=>{state.directory[i].email=e.target.value.trim();save();});
+    row.querySelector(".d-send").addEventListener("click",()=>composePersonEmail(state.directory[i]));
+    row.querySelector(".d-del").addEventListener("click",()=>{state.directory.splice(i,1);save();openEmailCenter();});
+  });
+  document.getElementById("d-add").onclick=()=>{const n=document.getElementById("d-new-name").value.trim();if(!n)return;state.directory.push({name:n,email:document.getElementById("d-new-email").value.trim()});save();openEmailCenter();};
+  document.getElementById("d-close").onclick=closeModal;
+}
+
+function refreshFilters(){
+  const fr=document.getElementById("filterRegion"); fr.innerHTML=`<option value="">All regions</option>`+allRegions().map(r=>`<option value="${escapeHtml(r)}" ${prefs.region===r?"selected":""}>${escapeHtml(r)}</option>`).join("");
+  const fp=document.getElementById("filterPerson"); fp.innerHTML=`<option value="">All people</option>`+allPeople().map(p=>`<option value="${escapeHtml(p)}" ${prefs.person===p?"selected":""}>${escapeHtml(p)}</option>`).join("");
+}
+
+function renderWebinars(){
+  const wrap=document.getElementById("webinars");
+  const list=state.webinars||[];
+  const stcls=s=> s==="Confirmed"?"web-conf": s==="Done"?"web-done":"web-tent";
+  const MONTHNAMES=["January","February","March","April","May","June","July","August","September","October","November","December"];
+  function cardHtml(w){ return `<div class="web-card" data-id="${w.id}">
+     <div class="ttl">${escapeHtml(w.title)}</div>
+     <div class="line">📅 ${escapeHtml([w.month,w.date].filter(Boolean).join(" "))||"TBD"}</div>
+     ${(w.type||w.topic)?`<div class="line">🎤 ${escapeHtml([w.type,w.topic].filter(Boolean).join(" · "))}</div>`:""}
+     ${w.audience?`<div class="line">🎯 ${escapeHtml(w.audience)}</div>`:""}
+     ${w.lead?`<div class="line">👤 ${escapeHtml(w.lead)}</div>`:""}
+     <div style="display:flex;gap:8px;align-items:center;margin-top:8px"><span class="pill ${stcls(w.status)}">${escapeHtml(w.status||"")}</span>${w.reg?`<span class="line" style="margin:0">👥 ${escapeHtml(w.reg)} regs</span>`:""}</div>
+   </div>`; }
+  const groups={};
+  list.forEach(w=>{ const k=MONTHS[(w.month||"").slice(0,3).toLowerCase()]; const key=(k==null?99:k); (groups[key]=groups[key]||[]).push(w); });
+  const order=Object.keys(groups).map(Number).sort((a,b)=>a-b);
+  let html=`<div style="display:flex;align-items:center;margin-bottom:8px"><div style="font-weight:650;font-size:15px">🎤 Webinar Programme 2026 <span class="sub">(${list.length})</span></div><button class="btn primary" id="web-new" style="margin-left:auto">+ Webinar</button></div>`;
+  order.forEach(k=>{
+    html+=`<div class="web-month">${k===99?"Month TBD":MONTHNAMES[k]} <span class="sub" style="font-weight:400">· ${groups[k].length}</span></div>`;
+    html+=`<div class="web-grid">`+groups[k].map(cardHtml).join("")+`</div>`;
+  });
+  wrap.innerHTML=html;
+  document.getElementById("web-new").onclick=()=>openWebinar(null);
+  wrap.querySelectorAll(".web-card").forEach(el=>el.onclick=()=>openWebinar(el.dataset.id));
+}
+function openWebinar(id){
+  const isNew=!id;
+  const w=isNew?{id:uid(),title:"",month:"",date:"",type:"",topic:"",status:"Tentative",audience:"",lead:"",deps:"",promo:"",reg:"",notes:""}:JSON.parse(JSON.stringify(state.webinars.find(x=>x.id===id)));
+  const m=document.getElementById("modal");
+  const stOpts=["Confirmed","Tentative","Done"].map(s=>`<option ${w.status===s?"selected":""}>${s}</option>`).join("");
+  m.innerHTML=`<h2>${isNew?"New Webinar":"Edit Webinar"}</h2><div class="mh">Fields match the Webinar Programme tab in the source file.</div>
+    <div class="field"><label>Webinar title</label><input id="w-title" value="${escapeHtml(w.title)}"></div>
+    <div class="row"><div class="field"><label>Month</label><input id="w-month" value="${escapeHtml(w.month)}"></div><div class="field"><label>Date</label><input id="w-date" value="${escapeHtml(w.date)}"></div><div class="field"><label>Status</label><select id="w-status">${stOpts}</select></div></div>
+    <div class="row"><div class="field"><label>Type</label><input id="w-type" value="${escapeHtml(w.type)}"></div><div class="field"><label>Topic area</label><input id="w-topic" value="${escapeHtml(w.topic)}"></div></div>
+    <div class="row"><div class="field"><label>Target audience</label><input id="w-aud" value="${escapeHtml(w.audience)}"></div><div class="field"><label>Expected registrations</label><input id="w-reg" value="${escapeHtml(w.reg)}"></div></div>
+    <div class="field"><label>Lead / speakers</label><input id="w-lead" value="${escapeHtml(w.lead)}"></div>
+    <div class="field"><label>Dependencies</label><input id="w-deps" value="${escapeHtml(w.deps)}"></div>
+    <div class="field"><label>Promotion plan</label><input id="w-promo" value="${escapeHtml(w.promo)}"></div>
+    <div class="field"><label>Notes</label><textarea id="w-notes">${escapeHtml(w.notes)}</textarea></div>
+    <div class="modal-actions">${isNew?"":`<button class="btn danger" id="w-del">Delete</button>`}<span class="spacer"></span><button class="btn" id="w-cancel">Cancel</button><button class="btn primary" id="w-save">Save</button></div>`;
+  document.getElementById("modalBg").classList.add("open");
+  const val=(x)=>document.getElementById(x).value;
+  document.getElementById("w-cancel").onclick=closeModal;
+  if(!isNew) document.getElementById("w-del").onclick=()=>{ if(confirm("Delete this webinar?")){ state.webinars=state.webinars.filter(x=>x.id!==w.id); save(); closeModal(); render(); } };
+  document.getElementById("w-save").onclick=()=>{
+    w.title=val("w-title").trim(); if(!w.title){ alert("Enter a title."); return; }
+    w.month=val("w-month"); w.date=val("w-date"); w.status=val("w-status"); w.type=val("w-type"); w.topic=val("w-topic"); w.audience=val("w-aud"); w.reg=val("w-reg"); w.lead=val("w-lead"); w.deps=val("w-deps"); w.promo=val("w-promo"); w.notes=val("w-notes");
+    const idx=state.webinars.findIndex(x=>x.id===w.id); if(idx>=0) state.webinars[idx]=w; else state.webinars.push(w);
+    save(); closeModal(); render();
+  };
+}
+document.getElementById("modalBg").addEventListener("click",e=>{if(e.target.id==="modalBg")closeModal();});
+document.getElementById("draftBg").addEventListener("click",e=>{if(e.target.id==="draftBg")document.getElementById("draftBg").classList.remove("open");});
+document.getElementById("newBtn").onclick=()=>openModal(null);
+document.getElementById("reloadBtn").onclick=()=>{ if(CONNECTED){ setSync("Refreshing…","#b7791f"); poll(); } };
+document.querySelectorAll(".view-tab").forEach(b=>b.onclick=()=>{ viewMode=b.dataset.view; document.querySelectorAll(".view-tab").forEach(x=>x.classList.toggle("primary",x.dataset.view===viewMode)); render(); });
+document.getElementById("emailBtn").onclick=openEmailCenter;
+document.getElementById("filterRegion").addEventListener("change",e=>{prefs.region=e.target.value;render();});
+document.getElementById("filterPerson").addEventListener("change",e=>{prefs.person=e.target.value;render();});
+document.getElementById("search").addEventListener("input",e=>{prefs.search=e.target.value;render();});
+document.getElementById("exportBtn").onclick=()=>{
+  const rows=[["Event","Status","Type","Participation","Dates","Region","Location","People","Organizer","Cost USD","Currency","Original cost","Paid","Link","Relevance","Attachments","Comments","Subtasks done/total"]];
+  state.events.forEach(e=>{const subs=e.subtasks||[];const att=[e.att,...(e.files||[]).map(f=>f.url)].filter(Boolean).join(" ; ");const cmts=(e.commentLog||[]).map(c=>c.author+": "+c.text).join(" | ");rows.push([e.t,e.s,e.et,e.p,fmtDate(e),e.rg,e.loc,e.ppl,e.org,e.cu,e.cur,e.co,e.pd?"yes":"no",e.ln,(e.rel||"").replace(/\n/g," "),att,cmts.replace(/\n/g," "),`${subs.filter(s=>s.done).length}/${subs.length}`]);});
+  const csv=rows.map(r=>r.map(c=>`"${(c==null?"":c).toString().replace(/"/g,'""')}"`).join(",")).join("\n");
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"})); a.download="field-marketing-events-2026.csv"; a.click();
+};
+
+init();
+</script>
+</body>
+</html>
