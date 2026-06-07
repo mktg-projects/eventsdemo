@@ -264,6 +264,7 @@ async function init(){
 }
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 function escapeHtml(s){ return (s||"").toString().replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+function linkLabel(u){ try{ return new URL(u).hostname.replace(/^www\./,""); }catch(e){ return u; } }
 function money(e){ if(e.cu===null||e.cu===undefined) return "TBD"; return "$"+Number(e.cu).toLocaleString(); }
 function avatarColor(str){ let h=0; for(let i=0;i<str.length;i++) h=str.charCodeAt(i)+((h<<5)-h); return `hsl(${Math.abs(h)%360} 55% 48%)`; }
 function firstPerson(p){ if(!p||p==="—"||p==="TBD") return ""; return p.split(/[,+]/)[0].trim(); }
@@ -471,10 +472,10 @@ function openModal(id){
     <div class="field"><label><input type="checkbox" id="f-pd" ${e.pd?"checked":""} style="width:auto;display:inline;margin-right:6px">Paid</label></div>
     <div class="field"><label>Link / debrief</label><input id="f-ln" value="${escapeHtml(e.ln)}">${e.ln&&/^https?:/.test(e.ln)?`<div style="margin-top:5px"><a class="link" href="${escapeHtml(e.ln)}" target="_blank">↗ open</a></div>`:""}</div>
     <div class="field"><label>Relevance & key focus / notes</label><textarea id="f-rel">${escapeHtml(e.rel)}</textarea></div>
-    <div class="field"><label>Attachments</label>
-      <input id="f-att" value="${escapeHtml(e.att||'')}" placeholder="Paste a link (SharePoint / Drive folder)…">
-      <div style="display:flex;align-items:center;gap:8px;margin-top:6px"><input type="file" id="f-file" multiple style="font-size:12px;flex:1"><span id="f-upstatus" class="hint"></span></div>
-      <div id="file-list" style="margin-top:6px"></div>
+    <div class="field"><label>Attachments &amp; links</label>
+      <div id="file-list" style="margin-bottom:7px"></div>
+      <div class="add-sub" style="margin-bottom:7px"><input id="f-link" placeholder="Paste a link (SharePoint / Drive / etc.)…" style="flex:1;min-width:160px"><button class="btn sm" id="f-link-add">Add link</button></div>
+      <div style="display:flex;align-items:center;gap:8px"><input type="file" id="f-file" multiple style="font-size:12px;flex:1"><span id="f-upstatus" class="hint"></span></div>
     </div>
     <div class="field"><label>Comments / updates <span class="hint" style="display:inline;margin:0">(saved when you click Save)</span></label>
       <div id="comment-log" style="max-height:150px;overflow:auto;border:1px solid #eceef0;border-radius:7px;padding:8px;margin-bottom:6px"></div>
@@ -497,17 +498,21 @@ function openModal(id){
   })();
   (function(){
     if(!Array.isArray(e.files)) e.files=[];
-    const list=document.getElementById("file-list"), fin=document.getElementById("f-file"), st=document.getElementById("f-upstatus");
+    if(e.att){ e.files.push({name:linkLabel(e.att), url:e.att, kind:"link"}); e.att=""; }
+    const list=document.getElementById("file-list"), fin=document.getElementById("f-file"), st=document.getElementById("f-upstatus"), linkInput=document.getElementById("f-link");
     function renderFiles(){
-      list.innerHTML = e.files.length ? e.files.map((f,i)=>`<div class="line" style="justify-content:space-between"><a class="link" href="${escapeHtml(f.url)}" target="_blank">📎 ${escapeHtml(f.name)}</a><button class="btn sm danger" data-i="${i}">✕</button></div>`).join("") : "";
+      list.innerHTML = e.files.length ? e.files.map((f,i)=>`<div class="line" style="justify-content:space-between;gap:8px"><a class="link" href="${escapeHtml(f.url)}" target="_blank">${f.kind==="link"?"🔗":"📎"} ${escapeHtml(f.name)}</a><button class="btn sm danger" data-i="${i}">✕</button></div>`).join("") : `<div class="hint">No attachments yet.</div>`;
       list.querySelectorAll("button").forEach(b=>b.onclick=()=>{e.files.splice(+b.dataset.i,1);renderFiles();});
     }
     renderFiles();
+    function addLink(){ let v=linkInput.value.trim(); if(!v) return; if(!/^https?:\/\//i.test(v)) v="https://"+v; e.files.push({name:linkLabel(v), url:v, kind:"link"}); linkInput.value=""; renderFiles(); }
+    document.getElementById("f-link-add").onclick=addLink;
+    linkInput.addEventListener("keydown",ev=>{ if(ev.key==="Enter"){ ev.preventDefault(); addLink(); } });
     fin.addEventListener("change", async ()=>{
       if(!CONNECTED){ st.textContent="Connect the database to upload files."; fin.value=""; return; }
       for(const file of Array.from(fin.files)){
         st.textContent="Uploading "+file.name+"…";
-        try{ const url=await uploadFile(file); e.files.push({name:file.name,url:url}); renderFiles(); st.textContent="Uploaded ✓ (Save to keep)"; }
+        try{ const url=await uploadFile(file); e.files.push({name:file.name,url:url,kind:"file"}); renderFiles(); st.textContent="Uploaded ✓ (Save to keep)"; }
         catch(err){ const msg=(err&&err.message)?err.message:(""+err); st.textContent="Upload failed: "+msg; console.error("Upload error:", err); }
       }
       fin.value="";
@@ -559,7 +564,6 @@ function openModal(id){
     const cuv=document.getElementById("f-cu").value; e.cu=cuv===""?null:Number(cuv);
     e.cur=document.getElementById("f-cur").value; const cov=document.getElementById("f-co").value; e.co=cov===""?null:Number(cov);
     e.pd=document.getElementById("f-pd").checked; e.ln=document.getElementById("f-ln").value; e.rel=document.getElementById("f-rel").value;
-    e.att=document.getElementById("f-att").value.trim();
     const idx=state.events.findIndex(x=>x.id===e.id); if(idx>=0) state.events[idx]=e; else state.events.push(e);
     save(); closeModal(); render();
   };
